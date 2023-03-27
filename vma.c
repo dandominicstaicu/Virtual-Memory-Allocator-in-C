@@ -1,8 +1,19 @@
+//Copyright 2023 Dan-Dominic Staicu 311CAb
 #include "vma.h"
 
 arena_t *alloc_arena(const uint64_t size)
 {
-    return NULL;
+    arena_t *arena = malloc(sizeof(arena_t));
+    
+    if (!arena) {
+        fprintf(stderr, "could not alloc mem in alloc_arena\n");
+        return NULL;
+    }
+
+    arena->arena_size = size;
+    arena->alloc_list = NULL;
+
+    return arena;
 }
 
 void dealloc_arena(arena_t *arena)

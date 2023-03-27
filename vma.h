@@ -1,9 +1,24 @@
+//Copyright 2023 Dan-Dominic Staicu 311CAb
 #pragma once
 #include <inttypes.h>
-#include <stddef.h> 
+#include <stddef.h>
+#include <stdlib.h>
+
+#include "utils.h"
+
+typedef unsigned int uint;
+
+typedef struct {
+   void *data;
+   struct node_t *prev, *next;
+} node_t;
 
 /* TODO : add your implementation for doubly-linked list */
-typedef struct { } list_t;
+typedef struct {
+    node_t *head;
+    uint data_size;
+    uint size;
+} list_t;
 
 typedef struct {
    uint64_t start_address; 
