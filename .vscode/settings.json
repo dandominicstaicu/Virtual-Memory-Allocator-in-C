@@ -1,7 +1,0 @@
-{
-	"files.associations": {
-		"vma.h": "c",
-		"inttypes.h": "c",
-		"errors.h": "c"
-	}
-}
