@@ -4,6 +4,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
+
+typedef unsigned int uint;
 
 #define DIE(assertion, call_description)		\
 	do {										\

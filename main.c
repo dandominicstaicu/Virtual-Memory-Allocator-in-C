@@ -1,14 +1,14 @@
 #include "vma.h"
 #include <stdio.h>
 #include "utils.h"
+#include "arena.h"
 
 int main(void)
 {
 	char command[20];
 
 	while (scanf("%s", command)) {
-		switch (hash_command(command))
-		{
+		switch (hash_command(command)) {
 		case 0:
 			f_arena();
 			break;
