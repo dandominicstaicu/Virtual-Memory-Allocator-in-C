@@ -6,7 +6,9 @@
 
 #include "vma.h"
 
-void f_arena(void);
+void f_alloc_arena(void);
+
+void f_dealloc_arena(void);
 
 
 #endif

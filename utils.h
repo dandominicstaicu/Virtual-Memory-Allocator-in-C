@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <inttypes.h>
+#include <stddef.h>
 
 typedef unsigned int uint;
 

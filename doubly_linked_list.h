@@ -3,10 +3,11 @@
 
 #include "utils.h"
 
-typedef struct {
+typedef struct node_t node_t;
+struct node_t{
    void *data;
    struct node_t *prev, *next;
-} node_t;
+};
 
 /* TODO : add your implementation for doubly-linked list */
 typedef struct {

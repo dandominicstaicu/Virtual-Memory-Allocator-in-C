@@ -1,6 +1,6 @@
 #include "arena.h"
 
-void f_arena(void)
+void f_alloc_arena(void)
 {
 	uint64_t arena_size;
 	scanf("%ld", &arena_size);
@@ -10,6 +10,9 @@ void f_arena(void)
 		fprintf(stderr, "failed\n");
 		exit(-1);
 	}
+}
 
-	
+void f_dealloc_arena(void)
+{
+
 }

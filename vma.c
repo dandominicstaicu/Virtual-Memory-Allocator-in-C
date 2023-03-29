@@ -18,15 +18,15 @@ arena_t *alloc_arena(const uint64_t size)
 
 void dealloc_arena(arena_t *arena)
 {
-    ll_free(&arena);
+    // ll_free(arena->alloc_list);
 
-    free(arena->alloc_list);
-    free(arena);
+    // //free(arena->alloc_list);
+    // free(arena);
 }
 
 void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 {
-
+    
 }
 
 void free_block(arena_t *arena, const uint64_t address)
