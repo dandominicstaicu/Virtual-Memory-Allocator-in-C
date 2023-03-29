@@ -8,17 +8,18 @@
 int main(void)
 {
 	char command[20];
+	arena_t *arena = NULL;
 
 	while (scanf("%s", command)) {
 		switch (hash_command(command)) {
 		case 0:
-			f_alloc_arena();
+			f_alloc_arena(&arena);
 			break;
 		case 1:
 			f_dealloc_arena();
 			break;
 		case 2:
-			f_block();
+			f_block(arena);
 			break;
 		case 3:
 			f_free_block();

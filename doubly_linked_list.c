@@ -1,5 +1,11 @@
 #include "doubly_linked_list.h"
 
+short exists(list_t *list) {
+	if (!list)
+		return 0;
+	return 1;
+}
+
 //alloc nmemory for a new empty dll
 list_t *ll_create(unsigned int data_size)
 {

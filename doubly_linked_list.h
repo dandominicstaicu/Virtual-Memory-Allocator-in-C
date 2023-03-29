@@ -16,10 +16,16 @@ typedef struct {
     uint size;
 } list_t;
 
+short exists(list_t *list);
+
 list_t *ll_create(unsigned int data_size);
+
 node_t *ll_get_nth_node(list_t* list, unsigned int n);
+
 void ll_add_nth_node(list_t *list, unsigned int n, const void *new_data);
+
 node_t *ll_remove_nth_node(list_t *list, unsigned int n);
+
 void ll_free(list_t **pp_list);
 
 #endif

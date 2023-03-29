@@ -16,4 +16,6 @@ short hash_command(char *command)
 		return 5;
 	else if (strcmp(command, "PMAP"))
 		return 6;
+	
+	return -1;
 }

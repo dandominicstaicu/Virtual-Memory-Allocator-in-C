@@ -1,12 +1,12 @@
 #include "arena.h"
 
-void f_alloc_arena(void)
+void f_alloc_arena(arena_t **arena)
 {
 	uint64_t arena_size;
-	scanf("%ld", &arena_size);
+	scanf("%lu", &arena_size);
 
-	arena_t *arena = alloc_arena(arena_size);
-	if (!arena) {
+	*arena = alloc_arena(arena_size);
+	if (!(*arena)) {
 		fprintf(stderr, "failed\n");
 		exit(-1);
 	}
