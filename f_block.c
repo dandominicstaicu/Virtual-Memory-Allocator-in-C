@@ -6,7 +6,24 @@ void f_block(arena_t *arena)
 	uint64_t block_size = 0;
 	scanf("%lu%lu", &arena_address, &block_size);
 
-	//if ()
+	if (arena_address > arena->arena_size) {
+		error_inv_alloc_block_out();
+		return;
+	}
+
+	if (arena_address + block_size > arena->arena_size) {
+		error_inv_alloc_block_end();
+		return;
+	}
+
+	if (search_alloc(arena, 0, arena_address, arena_address + block_size - 1)) {
+		error_inv_alloc_block_alr_aloc();
+		return;
+	}
+
+	alloc_block(arena, arena_address, block_size);
+
+
 }
 
 void f_free_block(void)

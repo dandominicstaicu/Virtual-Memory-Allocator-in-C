@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 typedef unsigned int uint;
 

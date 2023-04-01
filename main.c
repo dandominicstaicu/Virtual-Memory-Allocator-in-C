@@ -7,6 +7,7 @@
 
 int main(void)
 {
+	
 	char command[20];
 	arena_t *arena = NULL;
 

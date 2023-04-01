@@ -7,9 +7,12 @@ void f_alloc_arena(arena_t **arena)
 
 	*arena = alloc_arena(arena_size);
 	if (!(*arena)) {
-		fprintf(stderr, "failed\n");
+		fprintf(stderr, "failed alloc in f_alloc\n");
 		exit(-1);
 	}
+
+	(*arena)->arena_size = 0;
+	(*arena)->alloc_list = ll_create(sizeof(block_t));
 }
 
 void f_dealloc_arena(void)
