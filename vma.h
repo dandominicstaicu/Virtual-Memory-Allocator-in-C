@@ -32,8 +32,8 @@ void free_block(arena_t* arena, const uint64_t address);
 
 void read(arena_t *arena, uint64_t address, uint64_t size);
 void write(arena_t *arena, const uint64_t address,  const uint64_t size, int8_t *data);
-void pmap(const arena_t *arena);
+// 
 void mprotect(arena_t *arena, uint64_t address, int8_t *permission);
 
-block_t *search_alloc(arena_t *arena, const short way, 
+block_t *search_alloc(arena_t *arena, 
 					       const uint64_t start, const uint64_t last);

@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "vma.h"
 
-void f_pmap();
+void f_pmap(const arena_t *arena);
 
 void f_write(void);
 

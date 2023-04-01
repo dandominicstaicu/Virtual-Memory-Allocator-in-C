@@ -12,8 +12,8 @@ struct node_t{
 /* TODO : add your implementation for doubly-linked list */
 typedef struct {
     node_t *head;
-    uint data_size;
-    uint size;
+    unsigned int data_size;
+    unsigned int size;
 } list_t;
 
 short exists(list_t *list);

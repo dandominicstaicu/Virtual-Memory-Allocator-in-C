@@ -32,7 +32,11 @@ int main(void)
 			f_write();
 			break;
 		case 6:
-			f_pmap();
+			//int a = 1000
+			//printf("%X",);
+			printf("macar o intrat in case\n");
+			f_pmap(arena);
+			printf("si o iesit din functie\n");
 			break;
 		default:
 			break;

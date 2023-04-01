@@ -11,7 +11,7 @@ void f_alloc_arena(arena_t **arena)
 		exit(-1);
 	}
 
-	(*arena)->arena_size = 0;
+	(*arena)->arena_size = arena_size;
 	(*arena)->alloc_list = ll_create(sizeof(block_t));
 }
 
