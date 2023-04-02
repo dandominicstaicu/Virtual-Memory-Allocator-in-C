@@ -200,7 +200,7 @@ void write(arena_t *arena, const uint64_t address, const uint64_t size, int8_t *
 
 		if (address >= start_block && address <= end_block) {
 			//printf("found start addr\n");
-
+			
 			if (address + size - 1 <= end_block) {
 				//copy in miniblockuri la data
 				copy_to_miniblock(block, data);

@@ -22,6 +22,7 @@ void f_write(arena_t *arena)
 		fprintf(stderr, "could not alloc data\n");
 		exit(-1);
 	}
+	getchar();
 	fgets((char *)data, write_size, stdin);
 	//printf("\n\ndata in fwrite: %s\n\n", data);
 
