@@ -5,8 +5,6 @@ void f_block(arena_t *arena)
 	uint64_t arena_address = 0;
 	uint64_t block_size = 0;
 	scanf("%lu%lu", &arena_address, &block_size);
-	//printf("\n%lu%lu\n", arena_address, block_size);
-	//printf("arena size: %ld\n", arena->arena_size);
 
 	if (arena_address > arena->arena_size) {
 		error_inv_alloc_block_out();
@@ -26,8 +24,10 @@ void f_block(arena_t *arena)
 	alloc_block(arena, arena_address, block_size);
 }
 
-void f_free_block(void)
+void f_free_block(arena_t *arena)
 {
-	uint64_t miniblock_address = 0;
-	scanf("%lu", &miniblock_address);
+	uint64_t block_address = 0;
+	scanf("%lu", &block_address);
+
+	free_block(arena, block_address);
 }

@@ -115,7 +115,6 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 		//scoatem din lista arenei pe vecinu din left
 		free_block(arena, neighbor_l->start_address);
 
-
 		block->start_address = neighbor_l->start_address;
 		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
 
@@ -149,27 +148,7 @@ void free_block(arena_t *arena, const uint64_t address)
 	for (uint64_t i = 0; i < cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
 
-		//uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
-		//node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
-
 		if (address == block->start_address) {
-
-			// for (uint64_t j = 0; j < cnt_miniblock; ++j) {
-			// 	//miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
-
-			// 	//printf("address: %ld and minibl addr: %ld\n", address, miniblock->start_address);
-				
-			// 	miniblock_list = miniblock_list->next;
-			// 	node_t *mini_rmv = ll_remove_nth_node((list_t *)block->miniblock_list, j);
-			// 	free(mini_rmv->data);
-			// 	free(mini_rmv);
-
-
-			// 	// } else {
-			// 	// 	miniblock_list = miniblock_list->next;
-			// 	// }
-			// }
-
 			ll_free((list_t **)&block->miniblock_list); //God help me
 
 			block_list = block_list->next;
@@ -227,12 +206,6 @@ block_t *search_alloc(arena_t *arena, const uint64_t start, const uint64_t last)
 
 		block_list = block_list->next;
 	}
-		
-	 //else if (way == 1) { //daca cautam doar la dreapta
-
-	// } else if (way == 2) { //daca cautam doar la stanga
-
-	// }
 
 	return NULL;
 }
