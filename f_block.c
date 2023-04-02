@@ -18,7 +18,7 @@ void f_block(arena_t *arena)
 		return;
 	}
 
-	if (search_alloc(arena, arena_address, arena_address + block_size)) {
+	if (search_alloc(arena, arena_address, arena_address + block_size - 1)) {
 		error_inv_alloc_block_alr_aloc();
 		return;
 	}

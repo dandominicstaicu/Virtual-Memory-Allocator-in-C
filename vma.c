@@ -28,97 +28,98 @@ void dealloc_arena(arena_t *arena)
 void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 {
     block_t *block = (block_t *)malloc(sizeof(block_t));
+	if (!block) {
+		fprintf(stderr, "block alloc failed");
+		exit(-1);
+	}
 
 	miniblock_t *first_miniblock = (miniblock_t *)malloc(sizeof(miniblock_t));
+	//TODO check malloc
+
 	first_miniblock->start_address = address;
 	first_miniblock->size = size;
 	first_miniblock->perm = 6; //TODO ce plm e asta
+
 	first_miniblock->rw_buffer = malloc(sizeof(char) * size);
+	if (!first_miniblock->rw_buffer) {
+		fprintf(stderr, "rw_buffer alloc failed");
+		exit(-1);
+	}
 
-	block_t *neighbor_r = search_alloc(arena, address + size, address + size + 1);
-	block_t *neighbor_l = search_alloc(arena, address - 2, address - 1);
-
-
+	block_t *neighbor_r = search_alloc(arena, address + size, address + size);
+	block_t *neighbor_l = search_alloc(arena, address - 1, address - 1);
 
 	if (neighbor_l && neighbor_r) {
 		block->start_address = neighbor_l->start_address;
-		block->size = neighbor_l->size + size + neighbor_r->size;
-		
-		// size_t new_size = ((list_t *)neighbor_l->miniblock_list)->size 
-		// 				+ ((list_t *)neighbor_r->miniblock_list)->size
-		// 				+ size;
-		//block->miniblock_list = malloc(new_size);
+		block->size = (size_t)(neighbor_l->size + size + neighbor_r->size);
+		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
 
-		block->miniblock_list = ll_create(sizeof(miniblock_t));
-
-		node_t *node = ((list_t *)neighbor_l->miniblock_list)->head;
-		while (node) {
-			ll_add_nth_node(block->miniblock_list, block->size, node->data);
+		list_t *left_list = (list_t *)neighbor_l->miniblock_list;
+		node_t *node = left_list->head;
+		for (unsigned int i = 0; i < left_list->size; ++i) {
+			ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, node->data);
 			node = node->next;
 		}
 
-		ll_add_nth_node(block->miniblock_list, block->size, first_miniblock);
+		ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, first_miniblock);
 
-		node = ((list_t *)neighbor_r->miniblock_list)->head;
-		while (node) {
-			ll_add_nth_node(block->miniblock_list, block->size, node->data);
+		list_t *right_list = (list_t *)neighbor_r->miniblock_list;
+		node = right_list->head;
+		for (unsigned int i = 0; i < right_list->size; ++i) {
+			ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, node->data);
 			node = node->next;
 		}
 		
 		//adaugam blocul nou mai mare in lista de blocuri
-		ll_add_nth_node(arena->alloc_list, arena->arena_size, &block);
-
+		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
+		
+		
+		
 		//scoatem din lista de blocuri din arena vecinii
-		//free_block_imp(neighbor_l);
-		//free_block_imp(neighbor_r);
+		free_block(arena, neighbor_l->start_address);
+		free_block(arena, neighbor_r->start_address);
 
 	} else if (neighbor_r/*imd la dreapta, in continuare*/) {
 		block->start_address = address;
 		block->size = size + neighbor_r->size;
+		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
 
-		block->miniblock_list = ll_create(sizeof(miniblock_t));
 
-		ll_add_nth_node(block->miniblock_list, 0, &first_miniblock);
+		ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, first_miniblock);
 	
-		node_t *node = ((list_t *)neighbor_r->miniblock_list)->head;
-		while (node) {
-			ll_add_nth_node(block->miniblock_list, block->size, node->data);
+		list_t *right_list = (list_t *)neighbor_r->miniblock_list;
+		node_t *node = right_list->head;
+		for (unsigned int i = 0; i < right_list->size; ++i) {
+			ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, node->data);
 			node = node->next;
 		}
-
-		ll_add_nth_node(arena->alloc_list, arena->arena_size, &block);
-
+		
+		//adaugam blocul nou mai mare in lista de blocuri
+		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
 		//scoatem din arena pe vecinu din right
 	
 	} else if (neighbor_l/*imd in stanga, inainte*/) {
 		block->start_address = neighbor_l->start_address;
 		block->size = neighbor_l->size + size;
+		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
 
-		block->miniblock_list = ll_create(sizeof(miniblock_t));
-
-		node_t *node = ((list_t *)neighbor_l->miniblock_list)->head;
-		while (node) {
-			ll_add_nth_node(block->miniblock_list, block->size, node->data);
+		list_t *left_list = (list_t *)neighbor_l->miniblock_list;
+		node_t *node = left_list->head;
+		for (unsigned int i = 0; i < left_list->size; ++i) {
+			ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, node->data);
 			node = node->next;
 		}
 
-		ll_add_nth_node(block->miniblock_list, block->size, &first_miniblock);
-		
-		ll_add_nth_node(arena->alloc_list, arena->arena_size, &block);
+		ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, first_miniblock);		
+
+		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
 
 		//scoatem din lista arenei pe vecinu din left
 	} else {
-        printf("alocare buna\n");
+        printf("alocare fara lipire\n");
 		
 		block->start_address = address;
-		//memcpy(block->start_address, address, sizeof(uint64_t));
 		block->size = (size_t)size;
-		//memcpy(block->size, size, sizeof(uint64_t));
-		//printf("pula pula block size: %ld\n", block->size);
-		//block->miniblock_list = malloc(sizeof(miniblock_t));
-
-		//list_t *aux_list = ll_create(sizeof(miniblock_t));
-		//memcpy(&block->miniblock_list, &aux_list, sizeof(list_t *));
 		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
         
 		
@@ -136,12 +137,12 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 	}
 }
 
-/*
 void free_block(arena_t *arena, const uint64_t address)
 {
 
 }
 
+/*
 void read(arena_t *arena, uint64_t address, uint64_t size)
 {
 
@@ -180,10 +181,11 @@ block_t *search_alloc(arena_t *arena, const uint64_t start, const uint64_t last)
 			return block;//pulamea
 		}
 		
-		uint64_t arena_last = block->start_address + block->size;
+		uint64_t arena_last = block->start_address + block->size - 1;
 		if (arena_last <= last && arena_last >= start) {
 			return block;//pulamea
 		}
+
 		block_list = block_list->next;
 	}
 		

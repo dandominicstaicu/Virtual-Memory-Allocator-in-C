@@ -50,10 +50,12 @@ int main(void)
 			f_pmap(arena);
 			break;
 		default:
+			goto kill_me;
 			printf("comanda gresita\n");
 			break;
 		}
 	}
-
+	
+kill_me:
     return 0;
 }
