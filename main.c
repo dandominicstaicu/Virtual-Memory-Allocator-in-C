@@ -21,6 +21,21 @@ int main(void)
 			break;
 		case 2:
 			f_block(arena);
+			/*
+			node_t *block_list = (node_t *)arena->alloc_list->head;
+			uint64_t cnt_block = arena->alloc_list->size;
+
+			for (uint64_t i = 1; i <= cnt_block; ++i) {
+				block_t *block = (block_t *)block_list->data;
+
+				//TODO debug
+				printf("size of block %ld: %ld\n", i, block->size);
+				//printf("this shit: %d", ((list_t *)block->miniblock_list)->size);
+				//all_miniblocks += ((list_t *)block->miniblock_list)->size;
+
+				block_list = block_list->next;
+			}
+			*/
 			break;
 		case 3:
 			f_free_block();
@@ -32,13 +47,10 @@ int main(void)
 			f_write();
 			break;
 		case 6:
-			//int a = 1000
-			//printf("%X",);
-			printf("macar o intrat in case\n");
 			f_pmap(arena);
-			printf("si o iesit din functie\n");
 			break;
 		default:
+			printf("comanda gresita\n");
 			break;
 		}
 	}

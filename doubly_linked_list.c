@@ -164,3 +164,8 @@ void ll_free(list_t **pp_list)
 	free(*pp_list);
 	*pp_list = NULL;
 }
+
+unsigned int dll_get_size(list_t *list)
+{
+	return list->size;
+}

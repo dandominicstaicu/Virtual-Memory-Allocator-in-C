@@ -2,7 +2,7 @@
 
 void f_alloc_arena(arena_t **arena)
 {
-	uint64_t arena_size;
+	uint64_t arena_size = 0;
 	scanf("%lu", &arena_size);
 
 	*arena = alloc_arena(arena_size);
@@ -11,8 +11,8 @@ void f_alloc_arena(arena_t **arena)
 		exit(-1);
 	}
 
-	(*arena)->arena_size = arena_size;
-	(*arena)->alloc_list = ll_create(sizeof(block_t));
+	//(*arena)->arena_size = arena_size;
+	//(*arena)->alloc_list = ll_create(sizeof(block_t));
 }
 
 void f_dealloc_arena(void)
