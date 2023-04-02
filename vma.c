@@ -50,7 +50,6 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 	block_t *neighbor_l = search_alloc(arena, address - 1, address - 1);
 
 	if (neighbor_l && neighbor_r) {
-		block->start_address = neighbor_l->start_address;
 		block->size = (size_t)(neighbor_l->size + size + neighbor_r->size);
 		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
 
@@ -69,18 +68,17 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 			ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, node->data);
 			node = node->next;
 		}
-		
-		//adaugam blocul nou mai mare in lista de blocuri
-		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
-		
-		
+
 		
 		//scoatem din lista de blocuri din arena vecinii
 		free_block(arena, neighbor_l->start_address);
 		free_block(arena, neighbor_r->start_address);
 
+		block->start_address = neighbor_l->start_address;
+		//adaugam blocul nou mai mare in lista de blocuri
+		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
+
 	} else if (neighbor_r/*imd la dreapta, in continuare*/) {
-		block->start_address = address;
 		block->size = size + neighbor_r->size;
 		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
 
@@ -94,12 +92,14 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 			node = node->next;
 		}
 		
+		//scoatem din arena pe vecinu din right
+		free_block(arena, neighbor_r->start_address);
+
+		block->start_address = address;
 		//adaugam blocul nou mai mare in lista de blocuri
 		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
-		//scoatem din arena pe vecinu din right
-	
+
 	} else if (neighbor_l/*imd in stanga, inainte*/) {
-		block->start_address = neighbor_l->start_address;
 		block->size = neighbor_l->size + size;
 		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
 
@@ -112,16 +112,19 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 
 		ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, first_miniblock);		
 
+		//scoatem din lista arenei pe vecinu din left
+		free_block(arena, neighbor_l->start_address);
+
+
+		block->start_address = neighbor_l->start_address;
 		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
 
-		//scoatem din lista arenei pe vecinu din left
 	} else {
         printf("alocare fara lipire\n");
 		
 		block->start_address = address;
 		block->size = (size_t)size;
 		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
-        
 		
         ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, first_miniblock);
 		
@@ -139,7 +142,43 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 
 void free_block(arena_t *arena, const uint64_t address)
 {
+	uint64_t cnt_block = arena->alloc_list->size;
 
+	node_t *block_list = arena->alloc_list->head;
+
+	for (uint64_t i = 0; i < cnt_block; ++i) {
+		block_t *block = (block_t *)block_list->data;
+
+		//uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
+		//node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
+
+		if (address == block->start_address) {
+
+			// for (uint64_t j = 0; j < cnt_miniblock; ++j) {
+			// 	//miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
+
+			// 	//printf("address: %ld and minibl addr: %ld\n", address, miniblock->start_address);
+				
+			// 	miniblock_list = miniblock_list->next;
+			// 	node_t *mini_rmv = ll_remove_nth_node((list_t *)block->miniblock_list, j);
+			// 	free(mini_rmv->data);
+			// 	free(mini_rmv);
+
+
+			// 	// } else {
+			// 	// 	miniblock_list = miniblock_list->next;
+			// 	// }
+			// }
+
+			ll_free((list_t **)&block->miniblock_list); //God help me
+
+			block_list = block_list->next;
+			node_t *blck_rmv = ll_remove_nth_node((list_t *)arena->alloc_list, i);
+			free(blck_rmv->data);
+			free(blck_rmv);
+		} else
+			block_list = block_list->next;
+	}
 }
 
 /*

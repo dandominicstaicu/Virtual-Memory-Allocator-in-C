@@ -49,6 +49,7 @@ void f_pmap(const arena_t *arena)
 		printf("Block %ld begin\n", i);
 		printf("Zone: 0x%lX - 0x%lX\n", block->start_address, block->start_address + block->size);
 	//TODO not sure about zone line idk +/- 1 idk idk idk man i go crazy
+	//nvm this is good :)
 
 		uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
 		node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
@@ -58,6 +59,8 @@ void f_pmap(const arena_t *arena)
 			printf("Miniblock %ld:", j);
 			printf("\t\t0x%lX\t\t-\t\t0x%lX\t\t| RW-\n", miniblock->start_address, miniblock->start_address + miniblock->size);
 			//TODO not sure about zone line idk +/- 1 idk idk idk man i go crazy
+
+			miniblock_list = miniblock_list->next;
 		}
 
 		printf("Block %ld end\n\n", i);
