@@ -7,7 +7,6 @@
 
 int main(void)
 {
-	
 	char command[20];
 	arena_t *arena = NULL;
 
@@ -17,7 +16,7 @@ int main(void)
 			f_alloc_arena(&arena);
 			break;
 		case 1:
-			f_dealloc_arena();
+			dealloc_arena(arena);
 			break;
 		case 2:
 			f_block(arena);
@@ -26,17 +25,18 @@ int main(void)
 			f_free_block(arena);
 			break;
 		case 4:
-			f_read();
+			f_read(arena);
 			break;
 		case 5:
-			f_write();
+			f_write(arena);
 			break;
 		case 6:
 			f_pmap(arena);
 			break;
 		default:
+			error_inv_command();
+			//DELETE IT OR DIE//
 			goto kill_me;
-			printf("comanda gresita\n");
 			break;
 		}
 	}

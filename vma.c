@@ -16,14 +16,22 @@ arena_t *alloc_arena(const uint64_t size)
     return arena;
 }
 
-/*
 void dealloc_arena(arena_t *arena)
 {
-    // ll_free(arena->alloc_list);
+    uint64_t cnt_block = arena->alloc_list->size;
+	node_t *block_list = arena->alloc_list->head;
 
-    // //free(arena->alloc_list);
-    // free(arena);
-} */
+	for (uint64_t i = 0; i < cnt_block; ++i) {
+		block_t *block = (block_t *)block_list->data;
+		free_block(arena, block->start_address);
+		block_list = block_list->next;
+	}
+
+	free(arena->alloc_list);
+	free(arena);
+
+	exit(0);
+}
 
 void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 {
@@ -128,27 +136,21 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
         ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, first_miniblock);
 		
 		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
-    
-        //printf("in allocblock: %d", ((list_t *)block->miniblock_list)->size);
-
-		/* DEBUG */
-		// int test = ((block_t *)arena->alloc_list->head->data)->size;
-		// printf("in functia pulii: %d\n", test);
-		//printf("pula: %d",((list_t *)block->miniblock_list)->size);
-		//printf("in allocblock: %d", dll_get_size((list_t *)block->miniblock_list));
 	}
 }
 
 void free_block(arena_t *arena, const uint64_t address)
 {
 	uint64_t cnt_block = arena->alloc_list->size;
-
 	node_t *block_list = arena->alloc_list->head;
+
+	short found = 0;
 
 	for (uint64_t i = 0; i < cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
 
 		if (address == block->start_address) {
+			found = 1;
 			ll_free((list_t **)&block->miniblock_list); //God help me
 
 			block_list = block_list->next;
@@ -158,19 +160,70 @@ void free_block(arena_t *arena, const uint64_t address)
 		} else
 			block_list = block_list->next;
 	}
+
+	if (!found) {
+		error_inv_addr_free();
+		return;
+	}
 }
 
-/*
 void read(arena_t *arena, uint64_t address, uint64_t size)
 {
+	uint64_t cnt_block = arena->alloc_list->size;
+	node_t *block_list = arena->alloc_list->head;
 
+	for (uint64_t i = 0; i < cnt_block; ++i) {
+		block_t *block = (block_t *)block_list->data;
+
+		//uint64_t start_block = block->start_address;
+		uint64_t end_block = block->start_address + block->size -1;
+	
+		if (address + size - 1 > end_block) {
+			uint64_t available_space = end_block - address + 1;
+			warn_read(available_space);
+		}
+		print_from_miniblock(block);
+		block_list = block_list->next;
+	}
 }
 
 void write(arena_t *arena, const uint64_t address, const uint64_t size, int8_t *data)
 {
+	uint64_t cnt_block = arena->alloc_list->size;
+	node_t *block_list = arena->alloc_list->head;
 
+	for (uint64_t i = 0; i < cnt_block; ++i) {
+		block_t *block = (block_t *)block_list->data;
+
+		uint64_t start_block = block->start_address;
+		uint64_t end_block = block->start_address + block->size -1;
+
+		if (address >= start_block && address <= end_block) {
+			//printf("found start addr\n");
+
+			if (address + size - 1 <= end_block) {
+				//copy in miniblockuri la data
+				copy_to_miniblock(block, data);
+			} else {
+				uint64_t available_space = end_block - address + 1;
+				int8_t *new_data = malloc(sizeof(int8_t) * available_space);
+				if (!new_data) {
+					fprintf(stderr, "could not alloc new data\n");
+					exit(-1);
+				}
+
+				memcpy(new_data, data, available_space);
+				
+				warn_write(available_space);
+				//copy in miniblockuri la new_data
+				copy_to_miniblock(block, new_data);
+			}
+		}
+		block_list = block_list->next;
+	}
 }
 
+/*
 // void pmap(const arena_t *arena)
 // {
     
@@ -208,4 +261,38 @@ block_t *search_alloc(arena_t *arena, const uint64_t start, const uint64_t last)
 	}
 
 	return NULL;
+}
+
+void print_from_miniblock(block_t *block)
+{
+	uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
+	node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
+
+	uint64_t offset = 0;
+
+	for (uint64_t j = 0; j < cnt_miniblock; ++j) {
+		miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
+
+		printf("%s", (char *)miniblock->rw_buffer);
+		offset += miniblock->size;
+
+		miniblock_list = miniblock_list->next;
+	}
+	printf("\n");
+}
+
+void copy_to_miniblock(block_t *block, int8_t *data)
+{
+	uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
+	node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
+
+	uint64_t offset = 0;
+	for (uint64_t j = 0; j < cnt_miniblock; ++j) {
+		miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
+
+		memcpy(miniblock->rw_buffer, data + offset, miniblock->size);
+		offset += miniblock->size;
+					
+		miniblock_list = miniblock_list->next;
+	}
 }

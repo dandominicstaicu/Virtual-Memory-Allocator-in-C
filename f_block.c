@@ -29,5 +29,10 @@ void f_free_block(arena_t *arena)
 	uint64_t block_address = 0;
 	scanf("%lu", &block_address);
 
+	if (block_address > arena->arena_size) {
+		error_inv_addr_free();
+		return;
+	}
+
 	free_block(arena, block_address);
 }

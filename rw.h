@@ -6,8 +6,8 @@
 
 void f_pmap(const arena_t *arena);
 
-void f_write(void);
+void f_write(arena_t *arena);
 
-void f_read(void);
+void f_read(arena_t *arena);
 
 #endif

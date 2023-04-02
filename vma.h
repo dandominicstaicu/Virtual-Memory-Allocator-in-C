@@ -5,6 +5,7 @@
 
 #include "doubly_linked_list.h"
 #include "utils.h"
+#include "errors.h"
 
 typedef struct {
    uint64_t start_address; 
@@ -37,3 +38,7 @@ void mprotect(arena_t *arena, uint64_t address, int8_t *permission);
 
 block_t *search_alloc(arena_t *arena, 
 					       const uint64_t start, const uint64_t last);
+
+void copy_to_miniblock(block_t *block, int8_t *data);
+
+void print_from_miniblock(block_t *block);
