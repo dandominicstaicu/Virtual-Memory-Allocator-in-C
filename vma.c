@@ -129,7 +129,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
 
 	} else {
-        printf("alocare fara lipire\n");
+        //printf("alocare fara lipire\n");
 		
 		block->start_address = address;
 		block->size = (size_t)size;

@@ -43,7 +43,7 @@ void f_pmap(const arena_t *arena)
 		free_size -= block->size;
 
 		//TODO debug
-		printf("size of block %ld: %ld\n", i, block->size);
+		//printf("size of block %ld: %ld\n", i, block->size);
 		//printf("this shit: %d", ((list_t *)block->miniblock_list)->size);
 		//all_miniblocks += ((list_t *)block->miniblock_list)->size;
 
@@ -77,7 +77,7 @@ void f_pmap(const arena_t *arena)
 			miniblock_list = miniblock_list->next;
 		}
 
-		printf("Block %ld end\n\n", i);
+		printf("Block %ld end\n", i);
 		block_list = block_list->next;
 	}
 }

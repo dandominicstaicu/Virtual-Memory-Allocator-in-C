@@ -36,11 +36,11 @@ int main(void)
 		default:
 			error_inv_command();
 			//DELETE IT OR DIE//
-			goto kill_me;
+			// goto kill_me;
 			break;
 		}
 	}
 	
-kill_me:
+// kill_me:
     return 0;
 }
