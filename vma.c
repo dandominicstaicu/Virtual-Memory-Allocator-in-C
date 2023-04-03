@@ -58,7 +58,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 	block_t *neighbor_l = search_alloc(arena, address - 1, address - 1);
 
 	if (neighbor_l && neighbor_r) {
-		block->size = (size_t)(neighbor_l->size + size + neighbor_r->size);
+		block->size = neighbor_l->size + size + neighbor_r->size;
 		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
 
 		list_t *left_list = (list_t *)neighbor_l->miniblock_list;
@@ -77,12 +77,13 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 			node = node->next;
 		}
 
-		
+		block->start_address = neighbor_l->start_address;
+
 		//scoatem din lista de blocuri din arena vecinii
 		free_block(arena, neighbor_l->start_address);
 		free_block(arena, neighbor_r->start_address);
 
-		block->start_address = neighbor_l->start_address;
+		
 		//adaugam blocul nou mai mare in lista de blocuri
 		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
 
@@ -120,10 +121,11 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 
 		ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, first_miniblock);		
 
-		//scoatem din lista arenei pe vecinu din left
-		free_block(arena, neighbor_l->start_address);
 
 		block->start_address = neighbor_l->start_address;
+		//scoatem din lista arenei pe vecinu din left
+		free_block(arena, neighbor_l->start_address);
+		
 		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
 
 	} else {
@@ -144,13 +146,13 @@ void free_block(arena_t *arena, const uint64_t address)
 	uint64_t cnt_block = arena->alloc_list->size;
 	node_t *block_list = arena->alloc_list->head;
 
+	char found = 0;
+
 	for (uint64_t i = 0; i < cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
 
 		uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
 		node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
-
-		short found = 0;
 
 		for (uint64_t j = 0; j < cnt_miniblock; ++j) {
 			miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
@@ -160,10 +162,11 @@ void free_block(arena_t *arena, const uint64_t address)
 
 			//if the miniblock is the only one in the block
 			if (start_mini == address) {
-				if (miniblock->size == block->size) {
-					found = 1;
+				found = 1;
 
-					ll_free((list_t *)&block->miniblock_list); //God help me
+				if (miniblock->size == block->size) {
+
+					ll_free((list_t **)&block->miniblock_list); //God help me
 
 					block_list = block_list->next;
 					node_t *block_rmv = ll_remove_nth_node((list_t *)arena->alloc_list, i);
@@ -176,18 +179,39 @@ void free_block(arena_t *arena, const uint64_t address)
 				// if there are more miniblocks inside the current block
 				if (start_mini == block->start_address) { /*la inceput*/
 					block->start_address = block->start_address + miniblock->size;
+					block->size -= miniblock->size;
 
 					node_t *mini_rmv = ll_remove_nth_node((list_t *)block->miniblock_list, 0);
 					free(mini_rmv->data);
 					free(mini_rmv);
 
-					
-
-				
 				} else if (start_mini == end_block - miniblock->start_address) { /*la sfarsit*/
+					block->size -= miniblock->size;
 
+					node_t *mini_rmv = ll_remove_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size);
+					free(mini_rmv->data);
+					free(mini_rmv);
 				} else {/*la mijloc*/
-				
+					//create new blocks with what was on left and right
+					node_t *loc_mini_list = ((list_t *)block->miniblock_list)->head;
+					for (uint64_t k = 0; k < cnt_miniblock; ++k) {
+						miniblock_t *loc_mini = (miniblock_t *)loc_mini_list->data;
+
+						if (loc_mini->start_address != address) {
+							alloc_block(arena, loc_mini->start_address, loc_mini->size);
+						}
+						loc_mini_list = loc_mini_list->next;
+					}
+
+					//delete and free the whole old block
+					ll_free((list_t **)&block->miniblock_list); //God help me
+
+					block_list = block_list->next;
+					node_t *blck_rmv = ll_remove_nth_node((list_t *)arena->alloc_list, i);
+					free(blck_rmv->data);
+					free(blck_rmv);
+
+					return;
 				}
 			}
 
@@ -195,6 +219,11 @@ void free_block(arena_t *arena, const uint64_t address)
 		}
 
 		block_list = block_list->next;
+	}
+
+	if (!found) {
+		error_inv_addr_free();
+		return;
 	}
 }
 
