@@ -23,4 +23,10 @@ void warn_read(uint64_t size);
 
 void warn_write(uint64_t size);
 
+void error_inv_mprot(void);
+
+void error_inv_perm_read(void);
+
+void error_inv_perm_write(void);
+
 #endif

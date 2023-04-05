@@ -31,16 +31,16 @@ int main(void)
 			f_write(arena);
 			break;
 		case 6:
-			f_pmap(arena);
+			pmap(arena);
+			break;
+		case 7:
+			f_mprotect(arena);
 			break;
 		default:
 			error_inv_command();
-			//DELETE IT OR DIE//
-			// goto kill_me;
 			break;
 		}
 	}
 	
-// kill_me:
     return 0;
 }

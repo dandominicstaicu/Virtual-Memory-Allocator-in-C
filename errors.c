@@ -46,3 +46,18 @@ void warn_write(uint64_t size)
 	printf("Warning: size was bigger than the block size. ");
 	printf("Writing %ld characters.\n", size);
 }
+
+void error_inv_mprot(void)
+{
+	printf("Invalid address for mprotect.\n");
+}
+
+void error_inv_perm_read(void)
+{
+	printf("Invalid permissions for read.\n");
+}
+
+void error_inv_perm_write(void)
+{
+	printf("Invalid permissions for read.\n");
+}

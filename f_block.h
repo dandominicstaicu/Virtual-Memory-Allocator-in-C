@@ -10,4 +10,6 @@ void f_block(arena_t *arena);
 
 void f_free_block(arena_t *arena);
 
+void f_mprotect(arena_t *arena);
+
 #endif

@@ -78,6 +78,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 		}
 
 		block->start_address = neighbor_l->start_address;
+		/*REMAKE ASAP*/
 
 		//scoatem din lista de blocuri din arena vecinii
 		free_block(arena, neighbor_l->start_address);
@@ -122,10 +123,12 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 		ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, first_miniblock);		
 
 
-		block->start_address = neighbor_l->start_address;
+		uint64_t addr =  neighbor_l->start_address;
 		//scoatem din lista arenei pe vecinu din left
 		free_block(arena, neighbor_l->start_address);
 		
+		/*REMAKE ASAP???*/
+		block->start_address = addr;
 		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
 
 	} else {
@@ -185,7 +188,7 @@ void free_block(arena_t *arena, const uint64_t address)
 					free(mini_rmv->data);
 					free(mini_rmv);
 
-				} else if (start_mini == end_block - miniblock->start_address) { /*la sfarsit*/
+				} else if (start_mini == end_block - miniblock->start_address + 1) { /*la sfarsit*/
 					block->size -= miniblock->size;
 
 					node_t *mini_rmv = ll_remove_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size);
@@ -283,18 +286,107 @@ void write(arena_t *arena, const uint64_t address, const uint64_t size, int8_t *
 	}
 }
 
-/*
-// void pmap(const arena_t *arena)
-// {
-    
-// }
 
-void mprotect(arena_t *arena, uint64_t address, int8_t *permission)
+void pmap(const arena_t *arena)
 {
+    uint64_t cnt_block = arena->alloc_list->size;
+	uint64_t free_size = arena->arena_size;
+	unsigned int all_miniblocks = 0;
+
+	node_t *block_list = (node_t *)arena->alloc_list->head;
+
+	for (uint64_t i = 1; i <= cnt_block; ++i) {
+		block_t *block = (block_t *)block_list->data;
+		free_size -= block->size;
+
+		//TODO debug
+		//printf("size of block %ld: %ld\n", i, block->size);
+		//printf("this shit: %d", ((list_t *)block->miniblock_list)->size);
+		//all_miniblocks += ((list_t *)block->miniblock_list)->size;
+
+		all_miniblocks += dll_get_size((list_t *)block->miniblock_list);
+
+		block_list = block_list->next;
+	}
+
+	printf("Total memory: 0x%lX bytes\n", arena->arena_size);
+	printf("Free memory: 0x%lX bytes\n", free_size);
+	printf("Number of allocated blocks: %ld\n", cnt_block);
+	printf("Number of allocated miniblocks: %d\n", all_miniblocks);
+
+	for (uint64_t i = 1; i <= cnt_block; ++i) {
+		printf("\n");
+		block_t *block = (block_t *)block_list->data;
+		printf("Block %ld begin\n", i);
+		printf("Zone: 0x%lX - 0x%lX\n", block->start_address, block->start_address + block->size);
+	//TODO not sure about zone line idk +/- 1 idk idk idk man i go crazy
+	//nvm this is good :)
+
+		uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
+		node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
+
+		for (uint64_t j = 1; j <= cnt_miniblock; ++j) {
+			miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
+			printf("Miniblock %ld:", j);
+			printf("\t\t0x%lX\t\t-\t\t0x%lX\t\t| RW-\n", miniblock->start_address, miniblock->start_address + miniblock->size);
+			//TODO not sure about zone line idk +/- 1 idk idk idk man i go crazy
+
+			miniblock_list = miniblock_list->next;
+		}
+
+		printf("Block %ld end\n", i);
+		block_list = block_list->next;
+	}
 
 }
 
-*/
+void mprotect(arena_t *arena, uint64_t address, int8_t *permission)
+{
+	uint64_t cnt_block = arena->alloc_list->size;
+	node_t *block_list = arena->alloc_list->head;
+
+	for (uint64_t i = 0; i < cnt_block; ++i) {
+		block_t *block = (block_t *)block_list->data;
+
+		uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
+		node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
+
+		for (uint64_t j = 0; j < cnt_miniblock; ++j) {
+			miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
+			uint64_t start_mini = miniblock->start_address;
+			
+			if (start_mini == address) {
+				miniblock->perm = num_perm(permission);
+				return;
+			}
+
+			miniblock_list = miniblock_list->next;
+		}
+
+		block_list = block_list->next;
+	}
+
+	error_inv_mprot();
+}
+
+uint8_t num_perm(int8_t *permission)
+{
+	uint8_t perm = 0;
+
+	if (strstr((char *)permission, "PROT_NONE"))
+		return 0;
+
+	if (strstr((char *)permission, "PROT_READ"))
+		perm += 4;
+
+	if (strstr((char *)permission, "PROT_WRITE"))
+		perm += 2;
+
+	if (strstr((char *)permission, "PROT_EXEC"))
+		perm += 1;
+
+	return perm;
+}
 
 block_t *search_alloc(arena_t *arena, const uint64_t start, const uint64_t last)
 {
@@ -338,7 +430,7 @@ void print_from_miniblock(block_t *block)
 
 		miniblock_list = miniblock_list->next;
 	}
-	printf("\n");
+	//printf("\n");
 }
 
 void copy_to_miniblock(block_t *block, int8_t *data)
@@ -352,7 +444,12 @@ void copy_to_miniblock(block_t *block, int8_t *data)
 
 		memcpy(miniblock->rw_buffer, data + offset, miniblock->size);
 		offset += miniblock->size;
-					
+		
+		if (j == cnt_miniblock - 1) {
+			char endl[] = "\n";
+			strcat(miniblock->rw_buffer, endl);
+			//TODO check this shit idk
+		}
 		miniblock_list = miniblock_list->next;
 	}
 }

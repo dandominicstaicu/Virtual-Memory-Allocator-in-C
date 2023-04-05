@@ -16,6 +16,8 @@ short hash_command(char *command)
 		return 5;
 	else if (strcmp(command, "PMAP") == 0)
 		return 6;
+	else if (strcmp(command, "MPROTECT") == 0)
+		return 7;
 	
 	return -1;
 }

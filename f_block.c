@@ -36,3 +36,14 @@ void f_free_block(arena_t *arena)
 
 	free_block(arena, block_address);
 }
+
+void f_mprotect(arena_t *arena)
+{
+	uint64_t arena_address = 0;
+	int8_t permissions[50] = "";
+
+	scanf("%lu", &arena_address);
+	fgets((char *)permissions, 50, stdin);
+
+	mprotect(arena, arena_address, permissions);
+}
