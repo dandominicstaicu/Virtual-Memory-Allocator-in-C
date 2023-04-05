@@ -173,11 +173,11 @@ void free_block(arena_t *arena, const uint64_t address)
 			uint64_t start_mini = miniblock->start_address;
 			uint64_t end_block = block->start_address + block->size - 1;
 
-			//if the miniblock is the only one in the block
+			
 			if (start_mini == address) {
 				found = 1;
 
-				if (miniblock->size == block->size) {
+				if (miniblock->size == block->size) { //if the miniblock is the only one in the block
 
 					ll_free((list_t **)&block->miniblock_list); //God help me
 
@@ -198,7 +198,7 @@ void free_block(arena_t *arena, const uint64_t address)
 					free(mini_rmv->data);
 					free(mini_rmv);
 
-				} else if (start_mini == end_block - miniblock->start_address + 1) { /*la sfarsit*/
+				} else if (start_mini == end_block - miniblock->start_address) { /*la sfarsit*/
 					block->size -= miniblock->size;
 
 					node_t *mini_rmv = ll_remove_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size);
@@ -216,6 +216,7 @@ void free_block(arena_t *arena, const uint64_t address)
 						loc_mini_list = loc_mini_list->next;
 					}
 
+					
 					//delete and free the whole old block
 					ll_free((list_t **)&block->miniblock_list); //God help me
 
@@ -223,6 +224,8 @@ void free_block(arena_t *arena, const uint64_t address)
 					node_t *blck_rmv = ll_remove_nth_node((list_t *)arena->alloc_list, i);
 					free(blck_rmv->data);
 					free(blck_rmv);
+
+					
 
 					return;
 				}
