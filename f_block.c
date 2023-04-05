@@ -6,7 +6,7 @@ void f_block(arena_t *arena)
 	uint64_t block_size = 0;
 	scanf("%lu%lu", &arena_address, &block_size);
 
-	if (arena_address > arena->arena_size) {
+	if (arena_address >= arena->arena_size) {
 		error_inv_alloc_block_out();
 		return;
 	}

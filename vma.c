@@ -102,7 +102,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 			node = node->next;
 		}
 		
-		//scoatem din arena pe vecinu din right
+		//remove from the arena list right neighbor
 		free_block(arena, neighbor_r->start_address);
 
 		block->start_address = address;
@@ -118,14 +118,24 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 		for (unsigned int i = 0; i < left_list->size; ++i) {
 			ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, node->data);
 			node = node->next;
+			
 		}
 
 		ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, first_miniblock);		
 
 
 		uint64_t addr =  neighbor_l->start_address;
-		//scoatem din lista arenei pe vecinu din left
-		free_block(arena, neighbor_l->start_address);
+		
+		//remove from arena list the left neighbor with ALL ITS MINIBLOCKS NOT ONLY ONE
+		uint64_t cnt_miniblock = ((list_t *)neighbor_l->miniblock_list)->size;
+		node_t *old_miniblock_list = ((list_t *)neighbor_l->miniblock_list)->head;
+
+		for (uint64_t j = 0; j < cnt_miniblock; ++j) {
+			miniblock_t *old_miniblock = (miniblock_t *)old_miniblock_list->data;
+			free_block(arena, old_miniblock->start_address);
+
+			old_miniblock_list = old_miniblock_list->next;
+		}
 		
 		/*REMAKE ASAP???*/
 		block->start_address = addr;
@@ -133,7 +143,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 
 	} else {
         //printf("alocare fara lipire\n");
-		
+
 		block->start_address = address;
 		block->size = (size_t)size;
 		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
@@ -407,6 +417,16 @@ block_t *search_alloc(arena_t *arena, const uint64_t start, const uint64_t last)
 		uint64_t arena_last = block->start_address + block->size - 1;
 		if (arena_last <= last && arena_last >= start) {
 			return block;//pulamea
+		}
+
+		if (start >= block->start_address &&
+			start <= block->start_address + block->size - 1) {
+			return block;
+		}
+
+		if (last >= block->start_address &&
+			last <= block->start_address + block->size - 1) {
+			return block;
 		}
 
 		block_list = block_list->next;
