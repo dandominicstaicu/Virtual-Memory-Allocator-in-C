@@ -42,7 +42,10 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 	}
 
 	miniblock_t *first_miniblock = (miniblock_t *)malloc(sizeof(miniblock_t));
-	//TODO check malloc
+	if (!first_miniblock) {
+		fprintf(stderr, "malloc failed in alloc at first_minibloc\n");
+		return;
+	}
 
 	first_miniblock->start_address = address;
 	first_miniblock->size = size;
@@ -77,16 +80,6 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 			node = node->next;
 		}
 
-		// block->start_address = neighbor_l->start_address;
-		// /*REMAKE ASAP*/
-
-		// //scoatem din lista de blocuri din arena vecinii
-		// free_block(arena, neighbor_l->start_address);
-		// free_block(arena, neighbor_r->start_address);
-
-		
-		// //adaugam blocul nou mai mare in lista de blocuri
-		// ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
 
 		uint64_t addr =  neighbor_l->start_address;
 		
@@ -225,6 +218,10 @@ void free_block(arena_t *arena, const uint64_t address)
 				} else {/*la mijloc*/
 					//create new blocks with what was on left and right
 					node_t *loc_mini_list = ((list_t *)block->miniblock_list)->head;
+
+					node_t *blck_rmv = ll_remove_nth_node((list_t *)arena->alloc_list, i);
+					//node_t *blck_rmv = ll_remove_nth_node((list_t *)arena->alloc_list, i);
+					
 					for (uint64_t k = 0; k < cnt_miniblock; ++k) {
 						miniblock_t *loc_mini = (miniblock_t *)loc_mini_list->data;
 
@@ -238,7 +235,7 @@ void free_block(arena_t *arena, const uint64_t address)
 					ll_free((list_t **)&block->miniblock_list); //God help me
 
 					block_list = block_list->next;
-					node_t *blck_rmv = ll_remove_nth_node((list_t *)arena->alloc_list, i);
+					
 					free(blck_rmv->data);
 					free(blck_rmv);
 

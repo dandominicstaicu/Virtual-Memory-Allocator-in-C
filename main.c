@@ -38,9 +38,11 @@ int main(void)
 			break;
 		default:
 			error_inv_command();
+			//goto pula;
 			break;
 		}
 	}
 	
+//pula:
     return 0;
 }
