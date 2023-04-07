@@ -125,8 +125,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 		
 		/*REMAKE ASAP???*/
 		block->start_address = addr;
-		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
-
+		
 	} else if (neighbor_r/*imd la dreapta, in continuare*/) {
 		block->size = size + neighbor_r->size;
 		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
@@ -146,8 +145,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 
 		block->start_address = address;
 		//adaugam blocul nou mai mare in lista de blocuri
-		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
-
+		
 	} else if (neighbor_l/*imd in stanga, inainte*/) {
 		block->size = neighbor_l->size + size;
 		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
@@ -178,8 +176,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 		
 		/*REMAKE ASAP???*/
 		block->start_address = addr;
-		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
-
+		
 	} else {
         //printf("alocare fara lipire\n");
 
@@ -189,8 +186,24 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 		
         ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, first_miniblock);
 		
-		ll_add_nth_node(arena->alloc_list, arena->alloc_list->size, block);
 	}
+
+	uint64_t cnt_block = arena->alloc_list->size;
+	node_t *block_list = arena->alloc_list->head;
+	unsigned int pos = 0;
+
+	for (uint64_t i = 0; i < cnt_block; ++i) {
+		block_t *in_list_block = (block_t *)block_list->data;
+		if (block->start_address < in_list_block->start_address)
+			break;
+
+		++pos;
+		block_list = block_list->next;
+		in_list_block = (block_t *)block_list->data;
+	}
+	
+	ll_add_nth_node(arena->alloc_list, pos, block);
+
 }
 
 void free_block(arena_t *arena, const uint64_t address)
@@ -371,6 +384,7 @@ void pmap(const arena_t *arena)
 		printf("\n");
 		block_t *block = (block_t *)block_list->data;
 		printf("Block %ld begin\n", i);
+		//TODO here X
 		printf("Zone: 0x%lX - 0x%lX\n", block->start_address, block->start_address + block->size);
 	//TODO not sure about zone line idk +/- 1 idk idk idk man i go crazy
 	//nvm this is good :)
