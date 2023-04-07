@@ -39,8 +39,10 @@ void mprotect(arena_t *arena, uint64_t address, int8_t *permission);
 block_t *search_alloc(arena_t *arena, 
 					       const uint64_t start, const uint64_t last);
 
-void copy_to_miniblock(block_t *block, int8_t *data);
+uint8_t copy_to_miniblock(block_t *block, int8_t *data);
 
 void print_from_miniblock(block_t *block);
 
 uint8_t num_perm(int8_t *permission);
+
+void print_perm(uint8_t permissions);

@@ -331,9 +331,13 @@ void write(arena_t *arena, const uint64_t address, const uint64_t size, int8_t *
 
 				memcpy(new_data, data, available_space);
 				
-				warn_write(available_space);
+				
 				//copy in miniblockuri la new_data
-				copy_to_miniblock(block, new_data);
+				uint8_t succes = copy_to_miniblock(block, new_data);
+
+				if (succes) 
+					warn_write(available_space);
+
 			}
 		}
 		block_list = block_list->next;
@@ -352,11 +356,6 @@ void pmap(const arena_t *arena)
 	for (uint64_t i = 1; i <= cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
 		free_size -= block->size;
-
-		//TODO debug
-		//printf("size of block %ld: %ld\n", i, block->size);
-		//printf("this shit: %d", ((list_t *)block->miniblock_list)->size);
-		//all_miniblocks += ((list_t *)block->miniblock_list)->size;
 
 		all_miniblocks += dll_get_size((list_t *)block->miniblock_list);
 
@@ -382,8 +381,12 @@ void pmap(const arena_t *arena)
 		for (uint64_t j = 1; j <= cnt_miniblock; ++j) {
 			miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
 			printf("Miniblock %ld:", j);
-			printf("\t\t0x%lX\t\t-\t\t0x%lX\t\t| RW-\n", miniblock->start_address, miniblock->start_address + miniblock->size);
+			printf("\t\t0x%lX\t\t-\t\t0x%lX\t\t| ", miniblock->start_address, miniblock->start_address + miniblock->size);
 			//TODO not sure about zone line idk +/- 1 idk idk idk man i go crazy
+
+			//RW-\n
+
+			print_perm(miniblock->perm);
 
 			miniblock_list = miniblock_list->next;
 		}
@@ -497,7 +500,7 @@ void print_from_miniblock(block_t *block)
 	//printf("\n");
 }
 
-void copy_to_miniblock(block_t *block, int8_t *data)
+uint8_t copy_to_miniblock(block_t *block, int8_t *data)
 {
 	uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
 	node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
@@ -505,6 +508,12 @@ void copy_to_miniblock(block_t *block, int8_t *data)
 	uint64_t offset = 0;
 	for (uint64_t j = 0; j < cnt_miniblock; ++j) {
 		miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
+
+		uint8_t perm = miniblock->perm;
+		if (perm == 0 || perm == 4 || perm == 1 || perm == 5) {
+			error_inv_perm_write();
+			return 0;
+		}
 
 		memcpy(miniblock->rw_buffer, data + offset, miniblock->size);
 		offset += miniblock->size;
@@ -515,5 +524,38 @@ void copy_to_miniblock(block_t *block, int8_t *data)
 			//TODO check this shit idk
 		}
 		miniblock_list = miniblock_list->next;
+	}
+	return 1;
+}
+
+void print_perm(uint8_t permissions)
+{
+	switch (permissions) {
+	case 0:
+		printf("---\n");
+		break;
+	case 1:
+		printf("--X\n");
+		break;
+	case 2:
+		printf("-W-\n");
+		break;
+	case 3:
+		printf("-WX\n");
+		break;
+	case 4:
+		printf("R--\n");
+		break;
+	case 5:
+		printf("R-X\n");
+		break;
+	case 6:
+		printf("RW-\n");
+		break;
+	case 7:
+		printf("RWX\n");
+		break;
+	default:
+		break;
 	}
 }

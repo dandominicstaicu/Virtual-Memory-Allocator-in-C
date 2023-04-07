@@ -59,5 +59,5 @@ void error_inv_perm_read(void)
 
 void error_inv_perm_write(void)
 {
-	printf("Invalid permissions for read.\n");
+	printf("Invalid permissions for write.\n");
 }
