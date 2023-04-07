@@ -61,6 +61,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 	block_t *neighbor_l = search_alloc(arena, address - 1, address - 1);
 
 	if (neighbor_l && neighbor_r) {
+		//printf("case both\n");
 		block->size = neighbor_l->size + size + neighbor_r->size;
 		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
 
@@ -83,16 +84,44 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 
 		uint64_t addr =  neighbor_l->start_address;
 		
-		//remove from arena list the left neighbor with ALL ITS MINIBLOCKS NOT ONLY ONE
-		uint64_t cnt_miniblock = ((list_t *)neighbor_l->miniblock_list)->size;
-		node_t *old_miniblock_list = ((list_t *)neighbor_l->miniblock_list)->head;
+		//HERE WE NEED FREE OF BOTH NEIGH L AND R BECAUSE WE CANT DO BOTH SAME TIME
 
-		for (uint64_t j = 0; j < cnt_miniblock; ++j) {
-			miniblock_t *old_miniblock = (miniblock_t *)old_miniblock_list->data;
-			free_block(arena, old_miniblock->start_address);
+		uint64_t cnt_mini_r = ((list_t *)neighbor_r->miniblock_list)->size;
+		node_t *mini_list_r = ((list_t *)neighbor_r->miniblock_list)->head;
 
-			old_miniblock_list = old_miniblock_list->next;
+		for (uint64_t j = 0; j < cnt_mini_r; ++j) {
+			miniblock_t *old_mini_r = (miniblock_t *)mini_list_r->data;
+			free_block(arena, old_mini_r->start_address);
+
+			mini_list_r = mini_list_r->next;
 		}
+
+		// TODO free neighbor !!!!
+
+		uint64_t cnt_mini_l = ((list_t *)neighbor_l->miniblock_list)->size;
+		node_t *mini_list_l = ((list_t *)neighbor_l->miniblock_list)->head;
+
+		for (uint64_t j = 0; j < cnt_mini_l; ++j) {
+			miniblock_t *old_mini_l = (miniblock_t *)mini_list_l->data;
+			free_block(arena, old_mini_l->start_address);
+
+			mini_list_l = mini_list_l->next;
+		}
+
+		//remove from arena list the left neighbor with ALL ITS MINIBLOCKS NOT ONLY ONE
+		//uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
+		//node_t *old_miniblock_list = ((list_t *)block->miniblock_list)->head;
+
+		//printf("cnt pulamea: %lu\n", cnt_miniblock);
+
+		//here above is the problem
+
+		// for (uint64_t j = 0; j < cnt_miniblock; ++j) {
+		// 	miniblock_t *old_miniblock = (miniblock_t *)old_miniblock_list->data;
+		// 	free_block(arena, old_miniblock->start_address);
+
+		// 	old_miniblock_list = old_miniblock_list->next;
+		// }
 		
 		/*REMAKE ASAP???*/
 		block->start_address = addr;
