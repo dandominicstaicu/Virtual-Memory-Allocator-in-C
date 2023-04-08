@@ -50,7 +50,7 @@ void ll_add_nth_node(list_t *list, unsigned int n,
 		return;
 	
 	//alloc new mem for a new node
-	node_t *new_node = (node_t *)malloc(sizeof(node_t));
+	node_t *new_node = (node_t *)calloc(1, sizeof(node_t));
 	DIE(!new_node, "could not alloc new_node\n");
 
 	//alloc new mem for new data inside the node

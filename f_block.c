@@ -34,7 +34,7 @@ void f_free_block(arena_t *arena)
 		return;
 	}
 
-	free_block(arena, block_address);
+	free_block(arena, block_address, 1);
 }
 
 void f_mprotect(arena_t *arena)
