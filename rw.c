@@ -29,5 +29,5 @@ void f_write(arena_t *arena)
 	//printf("\n\ndata in fwrite: %s\n\n", data);
 
 	write(arena, arena_address, write_size, data);
-	getchar();
+	//getchar();
 }

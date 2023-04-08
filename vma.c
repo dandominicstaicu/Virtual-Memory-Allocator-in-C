@@ -302,19 +302,37 @@ void read(arena_t *arena, uint64_t address, uint64_t size)
 	uint64_t cnt_block = arena->alloc_list->size;
 	node_t *block_list = arena->alloc_list->head;
 
+	int8_t found = 0;
+
 	for (uint64_t i = 0; i < cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
 
-		//uint64_t start_block = block->start_address;
-		uint64_t end_block = block->start_address + block->size -1;
-	
-		if (address + size - 1 > end_block) {
-			uint64_t available_space = end_block - address + 1;
-			warn_read(available_space);
+		uint64_t start_block = block->start_address;
+		uint64_t end_block = start_block + block->size -1;
+
+		if (address >= start_block && address <= end_block) {
+			if (address + size - 1 > end_block) {
+				uint64_t available_space = end_block - address + 1;
+				warn_read(available_space);
+			}
+
+			uint64_t offset = 0;
+			if (address > start_block)
+				offset = address - start_block;
+
+			
+			//printf("offsetu pulii: %lu\n", offset);
+
+			print_from_miniblock(block, offset);
+
+			found = 1;
 		}
-		print_from_miniblock(block);
+
 		block_list = block_list->next;
 	}
+
+	if (!found)
+		error_inv_addr_read();
 }
 
 void write(arena_t *arena, const uint64_t address, const uint64_t size, int8_t *data)
@@ -496,17 +514,17 @@ block_t *search_alloc(arena_t *arena, const uint64_t start, const uint64_t last)
 	return NULL;
 }
 
-void print_from_miniblock(block_t *block)
+void print_from_miniblock(block_t *block, uint64_t offset)
 {
 	uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
 	node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
 
-	uint64_t offset = 0;
+	//uint64_t offset = 0;
 
 	for (uint64_t j = 0; j < cnt_miniblock; ++j) {
 		miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
 
-		printf("%s", (char *)miniblock->rw_buffer);
+		printf("%s", (char *)miniblock->rw_buffer + offset);
 		offset += miniblock->size;
 
 		miniblock_list = miniblock_list->next;
