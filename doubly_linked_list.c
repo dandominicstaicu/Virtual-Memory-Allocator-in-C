@@ -1,11 +1,5 @@
 #include "doubly_linked_list.h"
 
-short exists(list_t *list) {
-	if (!list)
-		return 0;
-	return 1;
-}
-
 //alloc nmemory for a new empty dll
 list_t *ll_create(unsigned int data_size)
 {
@@ -26,7 +20,7 @@ list_t *ll_create(unsigned int data_size)
 node_t *ll_get_nth_node(list_t* list, unsigned int n)
 {
 	//check if list exits
-	if (!exists(list))
+	if (!list)
 		return NULL;
 
 	//map n between 0 and last index
@@ -52,7 +46,7 @@ void ll_add_nth_node(list_t *list, unsigned int n,
 					  const void *new_data)
 {
 	//check if list exists
-	if (!exists(list))
+	if (!list)
 		return;
 	
 	//alloc new mem for a new node
@@ -116,7 +110,7 @@ void ll_add_nth_node(list_t *list, unsigned int n,
 //n >= 0 is granted
 node_t *ll_remove_nth_node(list_t *list, unsigned int n)
 {
-	if(!exists(list) || !list->size)
+	if(!list || !list->size)
 		return NULL;
 	
 	if (n >= list->size)

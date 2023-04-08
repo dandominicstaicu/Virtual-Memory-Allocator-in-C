@@ -38,7 +38,7 @@ int main(void)
 			f_mprotect(arena);
 			break;
 		default:
-			printf("comanda pulii: %s\n", command);
+			//printf("comanda pulii: %s\n", command);
 			error_inv_command();
 			//goto pula;
 			break;

@@ -9,8 +9,6 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-typedef unsigned int uint;
-
 #define DIE(assertion, call_description)		\
 	do {										\
 		if (assertion) {						\

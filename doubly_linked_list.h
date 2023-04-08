@@ -9,14 +9,11 @@ struct node_t{
    struct node_t *prev, *next;
 };
 
-/* TODO : add your implementation for doubly-linked list */
 typedef struct {
     node_t *head;
     unsigned int data_size;
     unsigned int size;
 } list_t;
-
-short exists(list_t *list);
 
 list_t *ll_create(unsigned int data_size);
 
