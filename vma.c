@@ -320,10 +320,7 @@ void read(arena_t *arena, uint64_t address, uint64_t size)
 			if (address > start_block)
 				offset = address - start_block;
 
-			
-			//printf("offsetu pulii: %lu\n", offset);
-
-			print_from_miniblock(block, offset);
+			print_from_miniblock(block, offset, size);
 
 			found = 1;
 		}
@@ -340,6 +337,8 @@ void write(arena_t *arena, const uint64_t address, const uint64_t size, int8_t *
 	uint64_t cnt_block = arena->alloc_list->size;
 	node_t *block_list = arena->alloc_list->head;
 
+	uint8_t found = 0;
+
 	for (uint64_t i = 0; i < cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
 
@@ -348,7 +347,8 @@ void write(arena_t *arena, const uint64_t address, const uint64_t size, int8_t *
 
 		if (address >= start_block && address <= end_block) {
 			//printf("found start addr\n");
-			
+			found = 1;
+
 			if (address + size - 1 <= end_block) {
 				//copy in miniblockuri la data
 				copy_to_miniblock(block, data);
@@ -373,6 +373,9 @@ void write(arena_t *arena, const uint64_t address, const uint64_t size, int8_t *
 		}
 		block_list = block_list->next;
 	}
+
+	if (!found)
+		error_inv_addr_write();
 }
 
 
@@ -514,18 +517,39 @@ block_t *search_alloc(arena_t *arena, const uint64_t start, const uint64_t last)
 	return NULL;
 }
 
-void print_from_miniblock(block_t *block, uint64_t offset)
+void print_from_miniblock(block_t *block, uint64_t offset, uint64_t size)
 {
 	uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
 	node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
 
 	//uint64_t offset = 0;
-
-	for (uint64_t j = 0; j < cnt_miniblock; ++j) {
+	//TREAT OFFSET CASES
+	for (uint64_t j = 0; j < cnt_miniblock && size > 0; ++j) {
 		miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
 
-		printf("%s", (char *)miniblock->rw_buffer + offset);
-		offset += miniblock->size;
+		//int ind = 0;
+
+		void *buff = malloc(sizeof(int8_t) * miniblock->size + 1);
+
+		size_t cpy_size = (miniblock->size < size) ? miniblock->size : size;
+		memcpy(buff, miniblock->rw_buffer, miniblock->size + 2);
+		
+		//memcpy(buff + 1, "\n", 1);
+
+		size -= cpy_size;
+
+		// if (ind < miniblock->size) {
+		// 	char buff = (char *)miniblock->rw_buffer
+
+		// 	printf("%c", (char)miniblock->rw_buffer[ind + offset]);
+		// 	size -= miniblock->size;
+		// }
+		
+		printf("%s", (int8_t *)buff); //+offset
+		
+		
+		offset = 0;
+		//offset += miniblock->size;
 
 		miniblock_list = miniblock_list->next;
 	}
@@ -541,6 +565,7 @@ uint8_t copy_to_miniblock(block_t *block, int8_t *data)
 	for (uint64_t j = 0; j < cnt_miniblock; ++j) {
 		miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
 
+		//check permissions of the miniblock
 		uint8_t perm = miniblock->perm;
 		if (perm == 0 || perm == 4 || perm == 1 || perm == 5) {
 			error_inv_perm_write();
@@ -551,8 +576,8 @@ uint8_t copy_to_miniblock(block_t *block, int8_t *data)
 		offset += miniblock->size;
 		
 		if (j == cnt_miniblock - 1) {
-			char endl[] = "\n";
-			strcat(miniblock->rw_buffer, endl);
+			//int8_t endl[] = "\n";
+			strcat(miniblock->rw_buffer, "\n");
 			//TODO check this shit idk
 		}
 		miniblock_list = miniblock_list->next;
