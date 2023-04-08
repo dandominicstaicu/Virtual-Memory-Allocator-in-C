@@ -236,8 +236,8 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 			
 			if (start_mini == address) {
 				//found = 1;
-				//if (final == 1)
-				free(miniblock->rw_buffer);
+				if (final == 1)
+					free(miniblock->rw_buffer);
 
 				//if the miniblock is the only one in the block
 				if (miniblock->size == block->size) {
@@ -276,8 +276,10 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 			
 					for (uint64_t k = 0; k < cnt_miniblock; ++k) {
 						miniblock_t *loc_mini = (miniblock_t *)loc_mini_list->data;
-
+						 //maybe here
+						//free(miniblock->rw_buffer);
 						if (loc_mini->start_address != address) {
+							//maybe here
 							alloc_block(arena, loc_mini->start_address, loc_mini->size);
 						}
 						loc_mini_list = loc_mini_list->next;
