@@ -79,115 +79,15 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 
 	//both neighbors exist, before and after the new block
 	if (neighbor_l && neighbor_r) {
-		block->size = neighbor_l->size + size + neighbor_r->size;
-		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
+		both_neighbors(block, neighbor_l, neighbor_r,
+					   first_miniblock, arena, size);
 
-		list_t *left_list = (list_t *)neighbor_l->miniblock_list;
-		node_t *node = left_list->head;
-
-		list_t *mini_list = NULL;
-
-		for (unsigned int i = 0; i < left_list->size; ++i) {
-			mini_list = (list_t *)block->miniblock_list;
-			ll_add_nth_node(mini_list, mini_list->size, node->data);
-			node = node->next;
-		}
-
-		mini_list = (list_t *)block->miniblock_list;
-
-		ll_add_nth_node(mini_list, mini_list->size, first_miniblock);
-
-		list_t *right_list = (list_t *)neighbor_r->miniblock_list;
-		node = right_list->head;
-		for (unsigned int i = 0; i < right_list->size; ++i) {
-			mini_list = (list_t *)block->miniblock_list;
-			ll_add_nth_node(mini_list, mini_list->size, node->data);
-			node = node->next;
-		}
-
-		uint64_t addr =  neighbor_l->start_address;
-
-		uint64_t cnt_mini_r = ((list_t *)neighbor_r->miniblock_list)->size;
-		node_t *mini_list_r = ((list_t *)neighbor_r->miniblock_list)->head;
-
-		for (uint64_t j = 0; j < cnt_mini_r; ++j) {
-			miniblock_t *old_mini_r = (miniblock_t *)mini_list_r->data;
-
-			mini_list_r = mini_list_r->next;
-
-			uint64_t addr = old_mini_r->start_address;
-			free_block(arena, addr, 0);
-		}
-
-		uint64_t cnt_mini_l = ((list_t *)neighbor_l->miniblock_list)->size;
-		node_t *mini_list_l = ((list_t *)neighbor_l->miniblock_list)->head;
-
-		for (uint64_t j = 0; j < cnt_mini_l; ++j) {
-			miniblock_t *old_mini_l = (miniblock_t *)mini_list_l->data;
-
-			mini_list_l = mini_list_l->next;
-
-			uint64_t addr = old_mini_l->start_address;
-			free_block(arena, addr, 0);
-		}
-
-		block->start_address = addr;
 	} else if (neighbor_r) { //neighbor only on right, next to the new one
-		block->size = size + neighbor_r->size;
-		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
+		just_right(block, neighbor_r, arena, first_miniblock, size, address);
 
-		list_t *mini_list = (list_t *)block->miniblock_list;
-
-		ll_add_nth_node(mini_list, mini_list->size, first_miniblock);
-
-		list_t *right_list = (list_t *)neighbor_r->miniblock_list;
-		node_t *node = right_list->head;
-		for (unsigned int i = 0; i < right_list->size; ++i) {
-			mini_list = (list_t *)block->miniblock_list;
-			ll_add_nth_node(mini_list, mini_list->size, node->data);
-			node = node->next;
-		}
-
-		//remove from the arena list right neighbor
-		free_block(arena, neighbor_r->start_address, 0);
-
-		block->start_address = address;
 	} else if (neighbor_l) { //neighbor only on left, before to the new one
-		block->size = neighbor_l->size + size;
-		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
-
-		list_t *left_list = (list_t *)neighbor_l->miniblock_list;
-		node_t *node = left_list->head;
-
-		list_t *mini_list = NULL;
-
-		for (unsigned int i = 0; i < left_list->size; ++i) {
-			mini_list = (list_t *)block->miniblock_list;
-			ll_add_nth_node(mini_list, mini_list->size, node->data);
-			node = node->next;
-		}
-
-		mini_list = (list_t *)block->miniblock_list;
-		ll_add_nth_node(mini_list, mini_list->size, first_miniblock);
-
-		uint64_t addr =  neighbor_l->start_address;
-
-		//remove from arena list the left neighbor with ALL its miniblocks
-
-		list_t *left_list = (list_t *)neighbor_l->miniblock_list;
-		uint64_t cnt_miniblock = left_list->size;
-		node_t *old_miniblock_l = left_list->head;
-
-		for (uint64_t j = 0; j < cnt_miniblock; ++j) {
-			miniblock_t *old_miniblock = (miniblock_t *)old_miniblock_l->data;
-
-			old_miniblock_l = old_miniblock_l->next;
-
-			uint64_t addr = old_miniblock->start_address;
-			free_block(arena, addr, 0);
-		}
-
-		block->start_address = addr;
+		just_left(block, neighbor_l, arena, first_miniblock, size);
+		
 	} else { //no neighbors
 		block->start_address = address;
 		block->size = (size_t)size;
@@ -214,6 +114,127 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 	ll_add_nth_node(arena->alloc_list, pos, block);
 	free(block);
 	free(first_miniblock);
+}
+
+void just_left(block_t *block, block_t *neighbor_l, arena_t *arena,
+			   miniblock_t *first_miniblock, uint64_t size)
+{
+	block->size = neighbor_l->size + size;
+	block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
+
+	list_t *left_list = (list_t *)neighbor_l->miniblock_list;
+	node_t *node = left_list->head;
+
+	list_t *mini_list = NULL;
+
+	for (unsigned int i = 0; i < left_list->size; ++i) {
+		mini_list = (list_t *)block->miniblock_list;
+		ll_add_nth_node(mini_list, mini_list->size, node->data);
+		node = node->next;
+	}
+
+	mini_list = (list_t *)block->miniblock_list;
+	ll_add_nth_node(mini_list, mini_list->size, first_miniblock);
+
+	uint64_t addr =  neighbor_l->start_address;
+
+	//remove from arena list the left neighbor with ALL its miniblocks
+	uint64_t cnt_miniblock = left_list->size;
+	node_t *old_miniblock_l = left_list->head;
+
+	for (uint64_t j = 0; j < cnt_miniblock; ++j) {
+		miniblock_t *old_miniblock = (miniblock_t *)old_miniblock_l->data;
+
+		old_miniblock_l = old_miniblock_l->next;
+
+		uint64_t old_addr = old_miniblock->start_address;
+		free_block(arena, old_addr, 0);
+	}
+
+	block->start_address = addr;
+}
+
+void just_right(block_t *block, block_t *neighbor_r, arena_t *arena,
+				miniblock_t *first_miniblock, uint64_t size, uint64_t address)
+{
+	block->size = size + neighbor_r->size;
+	block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
+
+	list_t *mini_list = (list_t *)block->miniblock_list;
+
+	ll_add_nth_node(mini_list, mini_list->size, first_miniblock);
+
+	list_t *right_list = (list_t *)neighbor_r->miniblock_list;
+	node_t *node = right_list->head;
+	for (unsigned int i = 0; i < right_list->size; ++i) {
+		mini_list = (list_t *)block->miniblock_list;
+		ll_add_nth_node(mini_list, mini_list->size, node->data);
+		node = node->next;
+	}
+
+	//remove from the arena list right neighbor
+	free_block(arena, neighbor_r->start_address, 0);
+
+	block->start_address = address;
+}
+
+void both_neighbors(block_t *block, block_t *neighbor_l, block_t *neighbor_r,
+					miniblock_t *first_miniblock, arena_t *arena,
+					uint64_t size)
+{
+	block->size = neighbor_l->size + size + neighbor_r->size;
+	block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
+
+	list_t *left_list = (list_t *)neighbor_l->miniblock_list;
+	node_t *node = left_list->head;
+
+	list_t *mini_list = NULL;
+
+	for (unsigned int i = 0; i < left_list->size; ++i) {
+		mini_list = (list_t *)block->miniblock_list;
+		ll_add_nth_node(mini_list, mini_list->size, node->data);
+		node = node->next;
+	}
+
+	mini_list = (list_t *)block->miniblock_list;
+
+	ll_add_nth_node(mini_list, mini_list->size, first_miniblock);
+
+	list_t *right_list = (list_t *)neighbor_r->miniblock_list;
+	node = right_list->head;
+	for (unsigned int i = 0; i < right_list->size; ++i) {
+		mini_list = (list_t *)block->miniblock_list;
+		ll_add_nth_node(mini_list, mini_list->size, node->data);
+		node = node->next;
+	}
+
+	uint64_t addr =  neighbor_l->start_address;
+
+	uint64_t cnt_mini_r = ((list_t *)neighbor_r->miniblock_list)->size;
+	node_t *mini_list_r = ((list_t *)neighbor_r->miniblock_list)->head;
+
+	for (uint64_t j = 0; j < cnt_mini_r; ++j) {
+		miniblock_t *old_mini_r = (miniblock_t *)mini_list_r->data;
+
+		mini_list_r = mini_list_r->next;
+
+		uint64_t addr = old_mini_r->start_address;
+		free_block(arena, addr, 0);
+	}
+
+	uint64_t cnt_mini_l = ((list_t *)neighbor_l->miniblock_list)->size;
+	node_t *mini_list_l = ((list_t *)neighbor_l->miniblock_list)->head;
+
+	for (uint64_t j = 0; j < cnt_mini_l; ++j) {
+		miniblock_t *old_mini_l = (miniblock_t *)mini_list_l->data;
+
+		mini_list_l = mini_list_l->next;
+
+		uint64_t addr = old_mini_l->start_address;
+		free_block(arena, addr, 0);
+	}
+
+	block->start_address = addr;
 }
 
 void free_block(arena_t *arena, const uint64_t address, uint64_t final)

@@ -48,3 +48,13 @@ void print_from_miniblock(block_t *block, uint64_t address,
 uint8_t num_perm(int8_t *permission);
 
 void print_perm(uint8_t permissions);
+
+void both_neighbors(block_t *block, block_t *neighbor_l, block_t *neighbor_r,
+					miniblock_t *first_miniblock, arena_t *arena,
+					uint64_t size);
+
+void just_right(block_t *block, block_t *neighbor_r, arena_t *arena,
+				miniblock_t *first_miniblock, uint64_t size, uint64_t address);
+
+void just_left(block_t *block, block_t *neighbor_l, arena_t *arena,
+			   miniblock_t *first_miniblock, uint64_t size);
