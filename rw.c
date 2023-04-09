@@ -12,8 +12,6 @@ void f_read(arena_t *arena)
 
 void f_write(arena_t *arena)
 {
-	
-
 	uint64_t arena_address = 0;
 	uint64_t write_size = 0;
 
