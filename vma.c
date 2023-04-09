@@ -323,12 +323,12 @@ void read(arena_t *arena, uint64_t address, uint64_t size)
 			if (address > start_block)
 				offset = address - start_block;
 
-			succes = print_from_miniblock(block, address, size, offset);
-
-			if (succes == 1 && address + size - 1 > end_block) {
+			if (address + size - 1 > end_block) {
 				uint64_t available_space = end_block - address + 1;
 				warn_read(available_space);
 			}
+
+			succes = print_from_miniblock(block, address, size, offset);
 
 			found = 1;
 		}
