@@ -19,7 +19,7 @@ void f_write(arena_t *arena)
 
 	scanf("%lu%lu", &arena_address, &write_size);
 
-	int8_t *data = malloc(sizeof(int8_t) * write_size + 1);
+	int8_t *data = malloc(sizeof(int8_t) * (write_size + 1));
 	if (!data) {
 		fprintf(stderr, "could not alloc data\n");
 		exit(-1);
@@ -30,4 +30,6 @@ void f_write(arena_t *arena)
 
 	write(arena, arena_address, write_size, data);
 	//getchar();
+
+	free(data);
 }

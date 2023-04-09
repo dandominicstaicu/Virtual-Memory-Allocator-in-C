@@ -18,7 +18,7 @@ int main(void)
 		case 1:
 		//TODO free whole block at once function
 			dealloc_arena(arena);
-			break;
+			return 0;
 		case 2:
 			f_block(arena);
 			break;

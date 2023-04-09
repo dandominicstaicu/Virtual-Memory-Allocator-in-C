@@ -26,6 +26,8 @@ void dealloc_arena(arena_t *arena)
 	for (uint64_t i = 0; i < cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
 		
+		block_list = block_list->next;
+
 		uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
 		node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
 
@@ -39,9 +41,9 @@ void dealloc_arena(arena_t *arena)
 
 		ll_free((list_t **)&block->miniblock_list);
 
-		block_list = block_list->next;
+		
 
-		node_t *block_rmv = ll_remove_nth_node((list_t *)arena->alloc_list, i);
+		node_t *block_rmv = ll_remove_nth_node((list_t *)arena->alloc_list, 0);
 		free(block_rmv->data);
 		free(block_rmv);
 	}
@@ -49,7 +51,7 @@ void dealloc_arena(arena_t *arena)
 	free(arena->alloc_list);
 	free(arena);
 
-	exit(0);
+	return;
 }
 
 void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
@@ -70,10 +72,10 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 	first_miniblock->size = size;
 	first_miniblock->perm = 6; //TODO ce plm e asta
 
-	first_miniblock->rw_buffer = malloc(sizeof(char) * size);
+	first_miniblock->rw_buffer = malloc(sizeof(int8_t) * (size + 2));
 	if (!first_miniblock->rw_buffer) {
 		fprintf(stderr, "rw_buffer alloc failed");
-		exit(-1);
+		return;
 	}
 
 	block_t *neighbor_r = search_alloc(arena, address + size, address + size);
@@ -208,7 +210,6 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 
 		++pos;
 		block_list = block_list->next;
-		in_list_block = (block_t *)block_list->data;
 	}
 	
 	ll_add_nth_node(arena->alloc_list, pos, block);
@@ -277,12 +278,18 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 					for (uint64_t k = 0; k < cnt_miniblock; ++k) {
 						miniblock_t *loc_mini = (miniblock_t *)loc_mini_list->data;
 						 //maybe here
-						//free(miniblock->rw_buffer);
+						
 						if (loc_mini->start_address != address) {
+							free(loc_mini->rw_buffer);
 							//maybe here
 							alloc_block(arena, loc_mini->start_address, loc_mini->size);
+							//free(miniblock->rw_buffer);
+						} else {
+							;
 						}
+
 						loc_mini_list = loc_mini_list->next;
+						//free(miniblock->rw_buffer);
 					}
 
 					//delete and free the whole old block
@@ -380,6 +387,7 @@ void write(arena_t *arena, const uint64_t address, const uint64_t size, int8_t *
 				if (succes) 
 					warn_write(available_space);
 
+				free(new_data);
 			}
 		}
 		block_list = block_list->next;
@@ -536,17 +544,17 @@ void print_from_miniblock(block_t *block, uint64_t address, uint64_t size, uint6
 		miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
 		uint64_t end_mini = miniblock->start_address +miniblock->size - 1;
 
+		miniblock_list = miniblock_list->next;
+
 		if (end_mini < address) {
 			miniblock_list = miniblock_list->next;
 			offset -= miniblock->size;
 			continue;
 		}
-
+		
 		if (miniblock->start_address == address) {
 			printf("%s", (int8_t *)miniblock->rw_buffer);
 			size -= miniblock->size;
-
-			
 
 			miniblock_list = miniblock_list->next;
 
@@ -563,8 +571,6 @@ void print_from_miniblock(block_t *block, uint64_t address, uint64_t size, uint6
 			address = ((miniblock_t *)miniblock_list->data)->start_address;
 			continue;
 		}
-
-		miniblock_list = miniblock_list->next;
 	}
 }
 
@@ -584,18 +590,25 @@ uint8_t copy_to_miniblock(block_t *block, int8_t *data)
 			return 0;
 		}
 
-		memcpy(miniblock->rw_buffer, data + offset, miniblock->size);
+		size_t len = strlen((char *)data + offset);
+		size_t cpy_size = (len < miniblock->size) ? len : miniblock->size;
+
+		memcpy((int8_t *)miniblock->rw_buffer, (int8_t *)data + offset, cpy_size);
 		offset += miniblock->size;
 		//strcat(miniblock->rw_buffer, "\0");
-		memcpy((int8_t *)miniblock->rw_buffer + miniblock->size, "\0", 1);
+		
 
 		//printf("in mini: %s\n", (int8_t *)miniblock->rw_buffer);
 
 		if (j == cnt_miniblock - 1) {
 			//int8_t endl[] = "\n";
-			strcat(miniblock->rw_buffer, "\n");
+			//strcat((int8_t *)miniblock->rw_buffer, "\n");
+			memcpy((int8_t *)miniblock->rw_buffer + miniblock->size, "\n", 1);
 			//TODO check this shit idk
+		} else {
+			memcpy((int8_t *)miniblock->rw_buffer + miniblock->size, "\0", 1);
 		}
+
 		miniblock_list = miniblock_list->next;
 	}
 	return 1;
