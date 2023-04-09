@@ -17,17 +17,35 @@ void f_write(arena_t *arena)
 
 	scanf("%lu%lu", &arena_address, &write_size);
 
-	int8_t *data = malloc(sizeof(int8_t) * (write_size + 1));
+	int8_t *data = calloc(write_size + 1, sizeof(int8_t));
 	if (!data) {
 		fprintf(stderr, "could not alloc data\n");
 		exit(-1);
 	}
 	getchar();
-	fgets((char *)data, write_size + 1, stdin);
+
+	int8_t *buffer = calloc(write_size + 1, sizeof(int8_t));
+	size_t buff_size = 0;
+
+	/*SKULL SKULL SKULL SKULL SKULL SKULL SKULL*/
+	while (buff_size < write_size) {
+		fgets((char *)buffer, write_size - buff_size + 1, stdin);
+		
+		size_t line_len = strlen((char *)buffer);
+		memcpy(data + buff_size, buffer, line_len);
+
+		buff_size += line_len;
+		memset(buffer, 0, write_size + 1);
+	}
+	/*SKULL SKULL SKULL SKULL SKULL SKULL SKULL*/
+
+	//fgets((char *)data, write_size + 1, stdin);
 	//printf("\n\ndata in fwrite: %s\n\n", data);
 
+	//memcpy(data, buffer, write_size + 1);
 	write(arena, arena_address, write_size, data);
 	//getchar();
 
+	free(buffer);
 	free(data);
 }

@@ -190,13 +190,11 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 		block->start_address = addr;
 		
 	} else {
-
 		block->start_address = address;
 		block->size = (size_t)size;
 		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
 		
         ll_add_nth_node((list_t *)block->miniblock_list, ((list_t *)block->miniblock_list)->size, first_miniblock);
-		
 	}
 
 	uint64_t cnt_block = arena->alloc_list->size;
@@ -222,8 +220,6 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 	uint64_t cnt_block = arena->alloc_list->size;
 	node_t *block_list = arena->alloc_list->head;
 
-	//char found = 0;
-
 	for (uint64_t i = 0; i < cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
 
@@ -236,7 +232,6 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 			uint64_t start_mini = miniblock->start_address;
 			
 			if (start_mini == address) {
-				//found = 1;
 				if (final == 1)
 					free(miniblock->rw_buffer);
 
@@ -269,7 +264,7 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 					free(mini_rmv);
 
 					return;
-				} else {/*la mijloc*/
+				} else {/*in middle*/
 					//create new blocks with what was on left and right
 					node_t *loc_mini_list = ((list_t *)block->miniblock_list)->head;
 
@@ -277,19 +272,14 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 			
 					for (uint64_t k = 0; k < cnt_miniblock; ++k) {
 						miniblock_t *loc_mini = (miniblock_t *)loc_mini_list->data;
-						 //maybe here
 						
 						if (loc_mini->start_address != address) {
 							free(loc_mini->rw_buffer);
-							//maybe here
 							alloc_block(arena, loc_mini->start_address, loc_mini->size);
-							//free(miniblock->rw_buffer);
-						} else {
-							;
 						}
 
 						loc_mini_list = loc_mini_list->next;
-						//free(miniblock->rw_buffer);
+
 					}
 
 					//delete and free the whole old block
@@ -302,17 +292,14 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 				}
 				return;
 			}
-			//if (miniblock_list->next)
+
 			miniblock_list = miniblock_list->next;
 		}
-		//if (block_list->next)
+
 		block_list = block_list->next;
 	}
 
-	//if (!found) {
 	error_inv_addr_free();
-	// 	return;
-	// }
 }
 
 void read(arena_t *arena, uint64_t address, uint64_t size)

@@ -16,7 +16,6 @@ int main(void)
 			f_alloc_arena(&arena);
 			break;
 		case 1:
-		//TODO free whole block at once function
 			dealloc_arena(arena);
 			return 0;
 		case 2:
@@ -38,7 +37,6 @@ int main(void)
 			f_mprotect(arena);
 			break;
 		default:
-			//printf("comanda pulii: %s\n", command);
 			error_inv_command();
 			//goto pula;
 			break;
