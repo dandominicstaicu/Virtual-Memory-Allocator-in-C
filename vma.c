@@ -72,10 +72,10 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 	first_miniblock->size = size;
 	first_miniblock->perm = 6; //TODO ce plm e asta
 
-	first_miniblock->rw_buffer = malloc(sizeof(int8_t) * (size + 2));
+	first_miniblock->rw_buffer = calloc(size + 2, sizeof(int8_t));
 	if (!first_miniblock->rw_buffer) {
 		fprintf(stderr, "rw_buffer alloc failed");
-		return;
+		exit(-1);
 	}
 
 	block_t *neighbor_r = search_alloc(arena, address + size, address + size);
@@ -372,14 +372,16 @@ void write(arena_t *arena, const uint64_t address, const uint64_t size, int8_t *
 				copy_to_miniblock(block, data);
 			} else {
 				uint64_t available_space = end_block - address + 1;
-				int8_t *new_data = malloc(sizeof(int8_t) * available_space);
+				int8_t *new_data = malloc(sizeof(int8_t) * (available_space + 1));
 				if (!new_data) {
 					fprintf(stderr, "could not alloc new data\n");
 					exit(-1);
 				}
 
+				size_t data_len = strlen((char *)data);
+
 				memcpy(new_data, data, available_space);
-				
+				memcpy(new_data + available_space + 1, "\0", 1);
 				
 				//copy in miniblockuri la new_data
 				uint8_t succes = copy_to_miniblock(block, new_data);
@@ -599,14 +601,17 @@ uint8_t copy_to_miniblock(block_t *block, int8_t *data)
 		
 
 		//printf("in mini: %s\n", (int8_t *)miniblock->rw_buffer);
-
+		size_t str_len = strlen(miniblock->rw_buffer);
 		if (j == cnt_miniblock - 1) {
 			//int8_t endl[] = "\n";
 			//strcat((int8_t *)miniblock->rw_buffer, "\n");
-			memcpy((int8_t *)miniblock->rw_buffer + miniblock->size, "\n", 1);
+			//printf("lenu pulii: %ld\n", strlen(miniblock->rw_buffer));
+			//printf("miniblock size : %ld\n", miniblock->size);
+			
+			memcpy((int8_t *)miniblock->rw_buffer + str_len, "\n", 1);
 			//TODO check this shit idk
 		} else {
-			memcpy((int8_t *)miniblock->rw_buffer + miniblock->size, "\0", 1);
+			memcpy((int8_t *)miniblock->rw_buffer + str_len, "\0", 1);
 		}
 
 		miniblock_list = miniblock_list->next;
