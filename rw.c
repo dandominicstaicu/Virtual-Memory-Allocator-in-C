@@ -38,13 +38,8 @@ void f_write(arena_t *arena)
 		memset(buffer, 0, write_size + 1);
 	}
 	/*SKULL SKULL SKULL SKULL SKULL SKULL SKULL*/
-
-	//fgets((char *)data, write_size + 1, stdin);
-	//printf("\n\ndata in fwrite: %s\n\n", data);
-
-	//memcpy(data, buffer, write_size + 1);
+	
 	write(arena, arena_address, write_size, data);
-	//getchar();
 
 	free(buffer);
 	free(data);

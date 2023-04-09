@@ -541,22 +541,59 @@ void print_from_miniblock(block_t *block, uint64_t address, uint64_t size, uint6
 		}
 		
 		if (miniblock->start_address == address) {
-			printf("%s", (int8_t *)miniblock->rw_buffer);
+			char *content = calloc(miniblock->size + 1, sizeof(char));
+
+			memcpy(content, miniblock->rw_buffer, miniblock->size + 1);
+			memcpy(content + miniblock->size, "\0", 1);
+
+			size_t start = 0;
+			size_t len = strlen(content);
+
+			while (size && start < len) {
+				printf("%c", content[start]);
+				start++;
+				size--;
+			}
+			
+
+			if (start != len || j == cnt_miniblock - 1)
+				printf("\n");
+			//printf("%s", (int8_t *)miniblock->rw_buffer);
 			//size -= miniblock->size;
 
 			miniblock_list = miniblock_list->next;
 
 			address = ((miniblock_t *)miniblock_list->data)->start_address;
+			
+			free(content);
 			continue;
 		}
 
 		if (address > miniblock->start_address && address < end_mini) {
-			printf("%s", (int8_t *)miniblock->rw_buffer + offset);
+			//printf("a intrat pe pl\n");
+			char *content = calloc(miniblock->size + 1, sizeof(char));
+			memcpy(content, miniblock->rw_buffer, miniblock->size + 1);
+
+			size_t start = offset;
+			size_t len = strlen(content);
+
+			while (size && start < len) {
+				printf("%c", content[start]);
+				start++;
+				size--;
+			}
+			
+			if (start != len || j == cnt_miniblock - 1)
+				printf("\n");
+			
+			//printf("%s", (int8_t *)miniblock->rw_buffer + offset);
 
 			offset = 0;
 
 			miniblock_list = miniblock_list->next;
 			address = ((miniblock_t *)miniblock_list->data)->start_address;
+			
+			free(content);
 			continue;
 		}
 	}
