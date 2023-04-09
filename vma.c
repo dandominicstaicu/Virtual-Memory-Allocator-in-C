@@ -308,6 +308,7 @@ void read(arena_t *arena, uint64_t address, uint64_t size)
 	node_t *block_list = arena->alloc_list->head;
 
 	int8_t found = 0;
+	int8_t succes = 0;
 
 	for (uint64_t i = 0; i < cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
@@ -316,16 +317,18 @@ void read(arena_t *arena, uint64_t address, uint64_t size)
 		uint64_t end_block = start_block + block->size -1;
 
 		if (address >= start_block && address <= end_block) {
-			if (address + size - 1 > end_block) {
-				uint64_t available_space = end_block - address + 1;
-				warn_read(available_space);
-			}
+			
 
 			uint64_t offset = 0;
 			if (address > start_block)
 				offset = address - start_block;
 
-			print_from_miniblock(block, address, size, offset);
+			succes = print_from_miniblock(block, address, size, offset);
+
+			if (succes == 1 && address + size - 1 > end_block) {
+				uint64_t available_space = end_block - address + 1;
+				warn_read(available_space);
+			}
 
 			found = 1;
 		}
@@ -522,7 +525,7 @@ block_t *search_alloc(arena_t *arena, const uint64_t start, const uint64_t last)
 	return NULL;
 }
 
-void print_from_miniblock(block_t *block, uint64_t address, uint64_t size, uint64_t offset)
+uint8_t print_from_miniblock(block_t *block, uint64_t address, uint64_t size, uint64_t offset)
 {
 	uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
 	node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
@@ -541,6 +544,12 @@ void print_from_miniblock(block_t *block, uint64_t address, uint64_t size, uint6
 		}
 		
 		if (miniblock->start_address == address) {
+			uint8_t perm = miniblock->perm;
+			if (perm == 0 || perm == 2 || perm == 1 || perm == 3) {
+				error_inv_perm_read();
+				return 0;
+			}
+
 			char *content = calloc(miniblock->size + 1, sizeof(char));
 
 			memcpy(content, miniblock->rw_buffer, miniblock->size + 1);
@@ -571,6 +580,12 @@ void print_from_miniblock(block_t *block, uint64_t address, uint64_t size, uint6
 
 		if (address > miniblock->start_address && address < end_mini) {
 			//printf("a intrat pe pl\n");
+			uint8_t perm = miniblock->perm;
+			if (perm == 0 || perm == 2 || perm == 1 || perm == 3) {
+				error_inv_perm_read();
+				return 0;
+			}
+
 			char *content = calloc(miniblock->size + 1, sizeof(char));
 			memcpy(content, miniblock->rw_buffer, miniblock->size + 1);
 
@@ -597,6 +612,7 @@ void print_from_miniblock(block_t *block, uint64_t address, uint64_t size, uint6
 			continue;
 		}
 	}
+	return 1;
 }
 
 uint8_t copy_to_miniblock(block_t *block, int8_t *data)

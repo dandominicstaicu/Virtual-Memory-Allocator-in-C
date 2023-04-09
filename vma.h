@@ -41,7 +41,7 @@ block_t *search_alloc(arena_t *arena,
 
 uint8_t copy_to_miniblock(block_t *block, int8_t *data);
 
-void print_from_miniblock(block_t *block, uint64_t address, uint64_t size, uint64_t offset);
+uint8_t print_from_miniblock(block_t *block, uint64_t address, uint64_t size, uint64_t offset);
 
 uint8_t num_perm(int8_t *permission);
 
