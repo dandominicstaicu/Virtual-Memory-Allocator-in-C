@@ -87,7 +87,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 
 	} else if (neighbor_l) { //neighbor only on left, before to the new one
 		just_left(block, neighbor_l, arena, first_miniblock, size);
-		
+
 	} else { //no neighbors
 		block->start_address = address;
 		block->size = (size_t)size;
@@ -241,10 +241,8 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 {
 	uint64_t cnt_block = arena->alloc_list->size;
 	node_t *block_list = arena->alloc_list->head;
-
 	for (uint64_t i = 0; i < cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
-
 		uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
 		node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
 
@@ -261,7 +259,6 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 				//if the miniblock is the only one in the block
 				if (miniblock->size == block->size) {
 					ll_free((list_t **)&block->miniblock_list); //God help me
-
 					list_t *alloc_l = (list_t *)arena->alloc_list;
 
 					node_t *block_rmv = ll_remove_nth_node(alloc_l, i);
@@ -279,34 +276,32 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 					node_t *mini_rmv = ll_remove_nth_node(mini_list, 0);
 					free(mini_rmv->data);
 					free(mini_rmv);
-
 					return;
 				} else if (start_mini == end) {
 					// miniblock at the end
 					block->size -= miniblock->size;
-
 					list_t *mini_list = (list_t *)block->miniblock_list;
-					node_t *mini_rmv = ll_remove_nth_node(mini_list, mini_list->size);
+					node_t *mini_rmv = ll_remove_nth_node(mini_list,
+														  mini_list->size);
 					free(mini_rmv->data);
 					free(mini_rmv);
 
 					return;
 				}
-
 				// else it means it's in middle
 				//create new blocks with what was on left and right
 				node_t *loc_mini_list = ((list_t *)block->miniblock_list)->head;
-
-				node_t *blck_rmv = ll_remove_nth_node((list_t *)arena->alloc_list, i);
+				list_t *alloc_l = (list_t *)arena->alloc_list;
+				node_t *blck_rmv = ll_remove_nth_node(alloc_l, i);
 
 				for (uint64_t k = 0; k < cnt_miniblock; ++k) {
 					miniblock_t *loc_mini = (miniblock_t *)loc_mini_list->data;
 
 					if (loc_mini->start_address != address) {
 						free(loc_mini->rw_buffer);
-						alloc_block(arena, loc_mini->start_address, loc_mini->size);
+						alloc_block(arena, loc_mini->start_address,
+									loc_mini->size);
 					}
-
 					loc_mini_list = loc_mini_list->next;
 				}
 
@@ -315,13 +310,10 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 
 				free(blck_rmv->data);
 				free(blck_rmv);
-
 				return;
 			}
-
 			miniblock_list = miniblock_list->next;
 		}
-
 		block_list = block_list->next;
 	}
 
@@ -562,9 +554,7 @@ void print_from_miniblock(block_t *block, uint64_t address,
 		}
 
 		if (miniblock->start_address == address) {
-			uint8_t perm = miniblock->perm;
-			if (perm == 0 || perm == 2 || perm == 1 || perm == 3) {
-				error_inv_perm_read();
+			if (perm_print(miniblock)) {
 				free(final);
 				return;
 			}
@@ -575,20 +565,7 @@ void print_from_miniblock(block_t *block, uint64_t address,
 			memcpy(content + miniblock->size, "\0", 1);
 
 			size_t start = 0;
-			size_t len = strlen(content);
-
-			while (size && start < len) {
-				char c_to_str[2];
-				c_to_str[1] = '\0';
-				c_to_str[0] = content[start];
-				strcat(final, c_to_str);
-
-				start++;
-				size--;
-			}
-
-			if (start != len || j == cnt_miniblock - 1)
-				strcat(final, "\n");
+			copy_to_final(&size, &start, content, final, j, cnt_miniblock);
 
 			miniblock_list = miniblock_list->next;
 
@@ -599,9 +576,7 @@ void print_from_miniblock(block_t *block, uint64_t address,
 		}
 
 		if (address > miniblock->start_address && address < end_mini) {
-			uint8_t perm = miniblock->perm;
-			if (perm == 0 || perm == 2 || perm == 1 || perm == 3) {
-				error_inv_perm_read();
+			if (perm_print(miniblock)) {
 				free(final);
 				return;
 			}
@@ -610,20 +585,7 @@ void print_from_miniblock(block_t *block, uint64_t address,
 			memcpy(content, miniblock->rw_buffer, miniblock->size + 1);
 
 			size_t start = offset;
-			size_t len = strlen(content);
-
-			while (size && start < len) {
-				char c_to_str[2];
-				c_to_str[1] = '\0';
-				c_to_str[0] = content[start];
-				strcat(final, c_to_str);
-
-				start++;
-				size--;
-			}
-
-			if (start != len || j == cnt_miniblock - 1)
-				strcat(final, "\n");
+			copy_to_final(&size, &start, content, final, j, cnt_miniblock);
 
 			offset = 0;
 
@@ -637,6 +599,36 @@ void print_from_miniblock(block_t *block, uint64_t address,
 
 	printf("%s", final);
 	free(final);
+}
+
+void copy_to_final(uint64_t *size, uint64_t *start, char *content, char *final,
+				   uint64_t j, uint64_t cnt_miniblock)
+{
+	size_t len = strlen(content);
+
+	while (*size && *start < len) {
+		char c_to_str[2];
+		c_to_str[1] = '\0';
+		c_to_str[0] = content[*start];
+		strcat(final, c_to_str);
+
+		*start++;
+		*size--;
+	}
+
+	if (start != len || j == cnt_miniblock - 1)
+		strcat(final, "\n");
+}
+
+uint8_t perm_print(miniblock_t *miniblock)
+{
+	uint8_t perm = miniblock->perm;
+	if (perm == 0 || perm == 2 || perm == 1 || perm == 3) {
+		error_inv_perm_read();
+		return 0;
+	}
+
+	return 1;
 }
 
 uint8_t copy_to_miniblock(block_t *block, int8_t *data)

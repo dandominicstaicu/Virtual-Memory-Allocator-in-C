@@ -58,3 +58,8 @@ void just_right(block_t *block, block_t *neighbor_r, arena_t *arena,
 
 void just_left(block_t *block, block_t *neighbor_l, arena_t *arena,
 			   miniblock_t *first_miniblock, uint64_t size);
+
+uint8_t perm_print(miniblock_t *miniblock);
+
+void copy_to_final(uint64_t *size, uint64_t *start, char *content, char *final,
+				   uint64_t j, uint64_t cnt_miniblock);
