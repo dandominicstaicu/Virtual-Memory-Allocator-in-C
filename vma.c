@@ -308,7 +308,7 @@ void read(arena_t *arena, uint64_t address, uint64_t size)
 	node_t *block_list = arena->alloc_list->head;
 
 	int8_t found = 0;
-	int8_t succes = 0;
+	//int8_t succes = 0;
 
 	for (uint64_t i = 0; i < cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
@@ -328,7 +328,7 @@ void read(arena_t *arena, uint64_t address, uint64_t size)
 				warn_read(available_space);
 			}
 
-			succes = print_from_miniblock(block, address, size, offset);
+			print_from_miniblock(block, address, size, offset);
 
 			found = 1;
 		}
@@ -525,17 +525,21 @@ block_t *search_alloc(arena_t *arena, const uint64_t start, const uint64_t last)
 	return NULL;
 }
 
-uint8_t print_from_miniblock(block_t *block, uint64_t address, uint64_t size, uint64_t offset)
+void print_from_miniblock(block_t *block, uint64_t address, uint64_t size, uint64_t offset)
 {
 	uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
 	node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
+	
+	char *final = calloc(size + 2, sizeof(char));
+	if (!final) {
+		fprintf(stderr, "calloc failed in print miniblock\n");
+		return;
+	}
 
 	//&& size > 0
 	for (uint64_t j = 0; j < cnt_miniblock ; ++j) {
 		miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
 		uint64_t end_mini = miniblock->start_address + miniblock->size - 1;
-
-		//miniblock_list = miniblock_list->next;
 
 		if (end_mini < address) {
 			miniblock_list = miniblock_list->next;
@@ -547,7 +551,8 @@ uint8_t print_from_miniblock(block_t *block, uint64_t address, uint64_t size, ui
 			uint8_t perm = miniblock->perm;
 			if (perm == 0 || perm == 2 || perm == 1 || perm == 3) {
 				error_inv_perm_read();
-				return 0;
+				free(final);
+				return;
 			}
 
 			char *content = calloc(miniblock->size + 1, sizeof(char));
@@ -559,14 +564,19 @@ uint8_t print_from_miniblock(block_t *block, uint64_t address, uint64_t size, ui
 			size_t len = strlen(content);
 
 			while (size && start < len) {
-				printf("%c", content[start]);
+				char c_to_str[2];
+				c_to_str[1] = '\0';
+				c_to_str[0] = content[start];
+				strcat(final, c_to_str);
+				//printf("%c", content[start]);
 				start++;
 				size--;
 			}
 			
 
 			if (start != len || j == cnt_miniblock - 1)
-				printf("\n");
+				strcat(final, "\n");
+				//printf("\n");
 			//printf("%s", (int8_t *)miniblock->rw_buffer);
 			//size -= miniblock->size;
 
@@ -583,7 +593,8 @@ uint8_t print_from_miniblock(block_t *block, uint64_t address, uint64_t size, ui
 			uint8_t perm = miniblock->perm;
 			if (perm == 0 || perm == 2 || perm == 1 || perm == 3) {
 				error_inv_perm_read();
-				return 0;
+				free(final);
+				return;
 			}
 
 			char *content = calloc(miniblock->size + 1, sizeof(char));
@@ -593,16 +604,19 @@ uint8_t print_from_miniblock(block_t *block, uint64_t address, uint64_t size, ui
 			size_t len = strlen(content);
 
 			while (size && start < len) {
-				printf("%c", content[start]);
+				char c_to_str[2];
+				c_to_str[1] = '\0';
+				c_to_str[0] = content[start];
+				strcat(final, c_to_str);
+				//printf("%c", content[start]);
 				start++;
 				size--;
 			}
 			
 			if (start != len || j == cnt_miniblock - 1)
-				printf("\n");
+				strcat(final, "\n");
+				//printf("\n");
 			
-			//printf("%s", (int8_t *)miniblock->rw_buffer + offset);
-
 			offset = 0;
 
 			miniblock_list = miniblock_list->next;
@@ -612,7 +626,9 @@ uint8_t print_from_miniblock(block_t *block, uint64_t address, uint64_t size, ui
 			continue;
 		}
 	}
-	return 1;
+
+	printf("%s", final);
+	free(final);
 }
 
 uint8_t copy_to_miniblock(block_t *block, int8_t *data)
