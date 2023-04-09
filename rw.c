@@ -27,18 +27,16 @@ void f_write(arena_t *arena)
 	int8_t *buffer = calloc(write_size + 1, sizeof(int8_t));
 	size_t buff_size = 0;
 
-	/*SKULL SKULL SKULL SKULL SKULL SKULL SKULL*/
 	while (buff_size < write_size) {
 		fgets((char *)buffer, write_size - buff_size + 1, stdin);
-		
+
 		size_t line_len = strlen((char *)buffer);
 		memcpy(data + buff_size, buffer, line_len);
 
 		buff_size += line_len;
 		memset(buffer, 0, write_size + 1);
 	}
-	/*SKULL SKULL SKULL SKULL SKULL SKULL SKULL*/
-	
+
 	write(arena, arena_address, write_size, data);
 
 	free(buffer);

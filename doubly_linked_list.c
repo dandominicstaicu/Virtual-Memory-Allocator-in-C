@@ -15,9 +15,9 @@ list_t *ll_create(unsigned int data_size)
 	return list;
 }
 
-//return a pointer to the nth node in the list; index starts from 0; 
+//return a pointer to the nth node in the list; index starts from 0;
 //n >= 0 granted; n >= list->size is possible
-node_t *ll_get_nth_node(list_t* list, unsigned int n)
+node_t *ll_get_nth_node(list_t *list, unsigned int n)
 {
 	//check if list exits
 	if (!list)
@@ -25,30 +25,27 @@ node_t *ll_get_nth_node(list_t* list, unsigned int n)
 
 	//map n between 0 and last index
 	unsigned int poz = 0;
-	
 	poz = n % list->size;
-	
-	
-	//iterate to the n-th node 
+
+	//iterate to the n-th node
 	node_t *node = list->head;
 
 	//if n == 0 then this for won't execute, so it will return list->head
 	for (unsigned int i = 0; i < poz; ++i)
 		node = node->next;
-	
+
 	return node;
-	
 }
 
 //create a new node on the nth position in the list containing the *new_data
 //if n >= list->size, add on the last position in the list; n >= 0 granted
-void ll_add_nth_node(list_t *list, unsigned int n, 
-					  const void *new_data)
+void ll_add_nth_node(list_t *list, unsigned int n,
+					 const void *new_data)
 {
 	//check if list exists
 	if (!list)
 		return;
-	
+
 	//alloc new mem for a new node
 	node_t *new_node = (node_t *)calloc(1, sizeof(node_t));
 	DIE(!new_node, "could not alloc new_node\n");
@@ -59,7 +56,7 @@ void ll_add_nth_node(list_t *list, unsigned int n,
 
 	//copy the new data in the new node
 	memcpy(new_node->data, new_data, list->data_size);
-	
+
 	//check if add first or empty list
 	node_t *node;
 
@@ -67,12 +64,11 @@ void ll_add_nth_node(list_t *list, unsigned int n,
 	if (list->size == 0) {
 		new_node->next = new_node;
 		new_node->prev = new_node;
-		
+
 		list->head = new_node;
 		++list->size;
 
 		return;
-
 	} else if (n == 0) {
 		node = list->head;
 
@@ -110,9 +106,9 @@ void ll_add_nth_node(list_t *list, unsigned int n,
 //n >= 0 is granted
 node_t *ll_remove_nth_node(list_t *list, unsigned int n)
 {
-	if(!list || !list->size)
+	if (!list || !list->size)
 		return NULL;
-	
+
 	if (n >= list->size)
 		n = list->size - 1;
 
@@ -128,9 +124,8 @@ node_t *ll_remove_nth_node(list_t *list, unsigned int n)
 	rmv->next->prev = rmv->prev;
 	rmv->prev->next = rmv->next;
 
-	if (--list->size == 0) {
+	if (--list->size == 0)
 		list->head = NULL;
-	}
 
 	return rmv;
 }
@@ -141,7 +136,7 @@ void ll_free(list_t **pp_list)
 	//check if list exists
 	if (!pp_list)
 		return;
-	
+
 	//iterate through all the nodes
 	node_t *node;
 	while ((*pp_list)->size) {
@@ -153,7 +148,7 @@ void ll_free(list_t **pp_list)
 		free(node->data);
 		free(node);
 	}
-	
+
 	//free the memory of the list and make it point to NULL
 	free(*pp_list);
 	*pp_list = NULL;

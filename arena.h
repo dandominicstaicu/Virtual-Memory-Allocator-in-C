@@ -8,7 +8,4 @@
 
 void f_alloc_arena(arena_t **arena);
 
-void f_dealloc_arena(void);
-
-
 #endif
