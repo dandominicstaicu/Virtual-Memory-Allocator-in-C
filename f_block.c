@@ -34,6 +34,8 @@ void f_free_block(arena_t *arena)
 		return;
 	}
 
+	// use parameter TRUE (1) because we want this free to be final
+	// this means no more shallow copy of this block
 	free_block(arena, block_address, 1);
 }
 
@@ -49,9 +51,10 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 	if (!first_miniblock) {
 		fprintf(stderr, "malloc failed in alloc at first_minibloc\n");
 		free(block);
-		return;
+		exit(-1);
 	}
 
+	//initial values of any new miniblock
 	first_miniblock->start_address = address;
 	first_miniblock->size = size;
 	first_miniblock->perm = 6;
@@ -64,6 +67,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 		exit(-1);
 	}
 
+	//search for any alloc'd blocks next to the area of the new miniblock
 	block_t *neighbor_r = search_alloc(arena, address + size, address + size);
 	block_t *neighbor_l = search_alloc(arena, address - 1, address - 1);
 
@@ -78,7 +82,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 	} else if (neighbor_l) { //neighbor only on left, before to the new one
 		just_left(block, neighbor_l, arena, first_miniblock, size);
 
-	} else { //no neighbors
+	} else { //no neighbors, so create a whole new block with the new miniblock
 		block->start_address = address;
 		block->size = (size_t)size;
 		block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
@@ -88,6 +92,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 		ll_add_nth_node(mini_list, mini_list->size, first_miniblock);
 	}
 
+	// add the new block (whole new/resized) in the list at the right mem index
 	uint64_t cnt_block = arena->alloc_list->size;
 	node_t *block_list = arena->alloc_list->head;
 	unsigned int pos = 0;
@@ -109,6 +114,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 void just_left(block_t *block, block_t *neighbor_l, arena_t *arena,
 			   miniblock_t *first_miniblock, uint64_t size)
 {
+	// init the new block with the size of both the neighbor and the new mini
 	block->size = neighbor_l->size + size;
 	block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
 
@@ -117,15 +123,18 @@ void just_left(block_t *block, block_t *neighbor_l, arena_t *arena,
 
 	list_t *mini_list = NULL;
 
+	//add the minis from the old left list to the new block's list
 	for (unsigned int i = 0; i < left_list->size; ++i) {
 		mini_list = (list_t *)block->miniblock_list;
 		ll_add_nth_node(mini_list, mini_list->size, node->data);
 		node = node->next;
 	}
 
+	//add the new miniblock in the new block's list
 	mini_list = (list_t *)block->miniblock_list;
 	ll_add_nth_node(mini_list, mini_list->size, first_miniblock);
 
+	//the new starting address is the older's one
 	uint64_t addr =  neighbor_l->start_address;
 
 	//remove from arena list the left neighbor with ALL its miniblocks
@@ -138,6 +147,9 @@ void just_left(block_t *block, block_t *neighbor_l, arena_t *arena,
 		old_miniblock_l = old_miniblock_l->next;
 
 		uint64_t old_addr = old_miniblock->start_address;
+		/* the FALSE (0) parameter means the free is not final, so don't free
+		the rw_buffer of the older miniblocks because didn't deep copy the
+		memory of it */
 		free_block(arena, old_addr, 0);
 	}
 
@@ -147,13 +159,15 @@ void just_left(block_t *block, block_t *neighbor_l, arena_t *arena,
 void just_right(block_t *block, block_t *neighbor_r, arena_t *arena,
 				miniblock_t *first_miniblock, uint64_t size, uint64_t address)
 {
+	// init the new block with the size of both the neighbor and the new mini
 	block->size = size + neighbor_r->size;
 	block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
 
+	//add the new miniblock in the new block's list
 	list_t *mini_list = (list_t *)block->miniblock_list;
-
 	ll_add_nth_node(mini_list, mini_list->size, first_miniblock);
 
+	//add the minis from the old right list to the new block's list
 	list_t *right_list = (list_t *)neighbor_r->miniblock_list;
 	node_t *node = right_list->head;
 	for (unsigned int i = 0; i < right_list->size; ++i) {
@@ -162,7 +176,10 @@ void just_right(block_t *block, block_t *neighbor_r, arena_t *arena,
 		node = node->next;
 	}
 
-	//remove from the arena list right neighbor
+	/* remove from the arena list right neighbor
+	the FALSE (0) parameter means the free is not final, so don't free
+	the rw_buffer of the older miniblocks because didn't deep copy the
+	memory of it */
 	free_block(arena, neighbor_r->start_address, 0);
 
 	block->start_address = address;
@@ -172,9 +189,11 @@ void both_neighbors(block_t *block, block_t *neighbor_l, block_t *neighbor_r,
 					miniblock_t *first_miniblock, arena_t *arena,
 					uint64_t size)
 {
+	//the new size is the sum of all 3 (old left, old right, new miniblock)
 	block->size = neighbor_l->size + size + neighbor_r->size;
 	block->miniblock_list = (list_t *)ll_create(sizeof(miniblock_t));
 
+	//add the minis from the old left list to the new block's list
 	list_t *left_list = (list_t *)neighbor_l->miniblock_list;
 	node_t *node = left_list->head;
 
@@ -186,10 +205,11 @@ void both_neighbors(block_t *block, block_t *neighbor_l, block_t *neighbor_r,
 		node = node->next;
 	}
 
+	//add the new miniblock in the new block's list
 	mini_list = (list_t *)block->miniblock_list;
-
 	ll_add_nth_node(mini_list, mini_list->size, first_miniblock);
 
+	//add the minis from the old right list to the new block's list
 	list_t *right_list = (list_t *)neighbor_r->miniblock_list;
 	node = right_list->head;
 	for (unsigned int i = 0; i < right_list->size; ++i) {
@@ -198,8 +218,10 @@ void both_neighbors(block_t *block, block_t *neighbor_l, block_t *neighbor_r,
 		node = node->next;
 	}
 
+	//the new starting address is the older's one
 	uint64_t addr =  neighbor_l->start_address;
 
+	//remove from arena list the right neighbor with ALL its miniblocks
 	uint64_t cnt_mini_r = ((list_t *)neighbor_r->miniblock_list)->size;
 	node_t *mini_list_r = ((list_t *)neighbor_r->miniblock_list)->head;
 
@@ -209,9 +231,13 @@ void both_neighbors(block_t *block, block_t *neighbor_l, block_t *neighbor_r,
 		mini_list_r = mini_list_r->next;
 
 		uint64_t addr = old_mini_r->start_address;
+		/* the FALSE (0) parameter means the free is not final, so don't free
+		the rw_buffer of the older miniblocks because didn't deep copy the
+		memory of it */
 		free_block(arena, addr, 0);
 	}
 
+	//remove from arena list the left neighbor with ALL its miniblocks
 	uint64_t cnt_mini_l = ((list_t *)neighbor_l->miniblock_list)->size;
 	node_t *mini_list_l = ((list_t *)neighbor_l->miniblock_list)->head;
 
@@ -221,6 +247,9 @@ void both_neighbors(block_t *block, block_t *neighbor_l, block_t *neighbor_r,
 		mini_list_l = mini_list_l->next;
 
 		uint64_t addr = old_mini_l->start_address;
+		/* the FALSE (0) parameter means the free is not final, so don't free
+		the rw_buffer of the older miniblocks because didn't deep copy the
+		memory of it */
 		free_block(arena, addr, 0);
 	}
 
@@ -234,16 +263,16 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 
 	for (uint64_t i = 0; i < cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
-
 		uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
 		node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
 
+		//iterate all the miniblocks inside every single block in the arena
 		for (uint64_t j = 0; j < cnt_miniblock; ++j) {
 			miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
 
 			uint64_t start_mini = miniblock->start_address;
 			uint64_t end = block->start_address + block->size - miniblock->size;
-
+			//check if any mini has the given address
 			if (start_mini == address) {
 				if (final == 1)
 					free(miniblock->rw_buffer);
@@ -277,7 +306,6 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 														  mini_list->size);
 					free(mini_rmv->data);
 					free(mini_rmv);
-
 					return;
 				}
 				// else it means it's in middle
@@ -307,5 +335,6 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 		}
 		block_list = block_list->next;
 	}
+	// if the no miniblock with the given address was found, print error
 	error_inv_addr_free();
 }

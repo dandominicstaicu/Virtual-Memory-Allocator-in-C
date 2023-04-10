@@ -12,6 +12,11 @@ Copyright 2023 Dan-Dominic Staicu 311CAb CTI-ACS-UPB
 ### Comentarii asupra temei:
 
 * Crezi că ai fi putut realiza o implementare mai bună?
+    deep copy la rw_buffer din miniblock
+    cautare in lista din ambele directii
+    testele 34-37
+    mai multe comentarii
+
 * Ce ai invățat din realizarea acestei teme?
     inttypes
     poiteri si memorii la liste
