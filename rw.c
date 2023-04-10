@@ -17,26 +17,34 @@ void f_write(arena_t *arena)
 
 	scanf("%lu%lu", &arena_address, &write_size);
 
+	//alloc a new memory in order to save all the read data in one mem zone
 	int8_t *data = calloc(write_size + 1, sizeof(int8_t));
 	if (!data) {
 		fprintf(stderr, "could not alloc data\n");
 		exit(-1);
 	}
-	getchar();
+	getchar(); //step over the \n from the previous command
 
+	//alloc a new mem for reading each line
 	int8_t *buffer = calloc(write_size + 1, sizeof(int8_t));
 	size_t buff_size = 0;
 
+	//while there can be read more characters
 	while (buff_size < write_size) {
+		//read a whole new line in buffer
 		fgets((char *)buffer, write_size - buff_size + 1, stdin);
 
+		//copy it in data where we save all the lines
+		//as we know input can be given on multiple lines
 		size_t line_len = strlen((char *)buffer);
 		memcpy(data + buff_size, buffer, line_len);
 
 		buff_size += line_len;
+		//reinit the buffer with empty (0)
 		memset(buffer, 0, write_size + 1);
 	}
 
+	//give the data further in order to be writen in the arena
 	write(arena, arena_address, write_size, data);
 
 	free(buffer);
@@ -50,6 +58,8 @@ void read(arena_t *arena, uint64_t address, uint64_t size)
 
 	int8_t found = 0;
 
+	/* iterate all the blocks in order to find
+	if the given mem address was alloc'd */
 	for (uint64_t i = 0; i < cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
 
@@ -57,15 +67,21 @@ void read(arena_t *arena, uint64_t address, uint64_t size)
 		uint64_t end_block = start_block + block->size - 1;
 
 		if (address >= start_block && address <= end_block) {
+			/* if address of read is not the same as the addres of the start
+			of the found block in the arena, calculate an offset where it sould
+			start printing from*/
 			uint64_t offset = 0;
 			if (address > start_block)
 				offset = address - start_block;
 
+			//check if the reading size goes outside the found block
 			if (address + size - 1 > end_block) {
 				uint64_t available_space = end_block - address + 1;
+				//and print a warning
 				warn_read(available_space);
 			}
 
+			//read from the miniblock's mem and print it
 			print_from_miniblock(block, address, size, offset);
 
 			found = 1;
@@ -73,6 +89,7 @@ void read(arena_t *arena, uint64_t address, uint64_t size)
 		block_list = block_list->next;
 	}
 
+	// if the read address was not found in the list
 	if (!found)
 		error_inv_addr_read();
 }
@@ -85,6 +102,8 @@ void write(arena_t *arena, const uint64_t address,
 
 	uint8_t found = 0;
 
+	/* iterate all the blocks in order to find
+	if the given mem address was alloc'd */
 	for (uint64_t i = 0; i < cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
 
@@ -94,10 +113,12 @@ void write(arena_t *arena, const uint64_t address,
 		if (address >= start_block && address <= end_block) {
 			found = 1;
 
+			/* if the data fits within the block*/
 			if (address + size - 1 <= end_block) {
 				//copy data in miniblocks
 				copy_to_miniblock(block, data);
 			} else {
+				/* if the data doesn't fit within the block*/
 				uint64_t available_space = end_block - address + 1;
 				int8_t *new_data = calloc(available_space + 2, sizeof(int8_t));
 				if (!new_data) {
@@ -105,12 +126,16 @@ void write(arena_t *arena, const uint64_t address,
 					exit(-1);
 				}
 
+				//copy to new data only as much as it fits
 				memcpy(new_data, data, available_space);
 				memcpy(new_data + available_space + 1, "\0", 1);
 
 				//copy new_data in miniblocks
 				uint8_t succes = copy_to_miniblock(block, new_data);
 
+				/* if copy was successful, print the warning
+				can be unsuccessful when a miniblock doesn't
+				have the permission*/
 				if (succes)
 					warn_write(available_space);
 
@@ -120,6 +145,7 @@ void write(arena_t *arena, const uint64_t address,
 		block_list = block_list->next;
 	}
 
+	//if not found, print the error
 	if (!found)
 		error_inv_addr_write();
 }
@@ -129,6 +155,7 @@ void mprotect(arena_t *arena, uint64_t address, int8_t *permission)
 	uint64_t cnt_block = arena->alloc_list->size;
 	node_t *block_list = arena->alloc_list->head;
 
+	//search for the miniblock found at the given address
 	for (uint64_t i = 0; i < cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
 
@@ -139,6 +166,7 @@ void mprotect(arena_t *arena, uint64_t address, int8_t *permission)
 			miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
 			uint64_t start_mini = miniblock->start_address;
 
+			//if found, set the perm field to a digit according to the standard
 			if (start_mini == address) {
 				miniblock->perm = num_perm(permission);
 				return;
@@ -150,11 +178,13 @@ void mprotect(arena_t *arena, uint64_t address, int8_t *permission)
 		block_list = block_list->next;
 	}
 
+	//if not found, print error
 	error_inv_mprot();
 }
 
 uint8_t num_perm(int8_t *permission)
 {
+	//perm is a sum, in case we are given more permissons
 	uint8_t perm = 0;
 
 	if (strstr((char *)permission, "PROT_NONE"))
@@ -178,6 +208,7 @@ void print_from_miniblock(block_t *block, uint64_t address,
 	uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
 	node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
 
+	/* create a new mem zone where it saves the final output*/
 	char *final = calloc(size + 2, sizeof(char));
 	if (!final) {
 		fprintf(stderr, "calloc failed in print miniblock\n");
@@ -194,29 +225,37 @@ void print_from_miniblock(block_t *block, uint64_t address,
 			continue;
 		}
 
+		// check if the given address is the same as a miniblock's
 		if (miniblock->start_address == address) {
+			//check for the print permissions
 			if (!perm_print(miniblock)) {
 				free(final);
 				return;
 			}
 
+			//copy content from the rw buffer
 			char *content = calloc(miniblock->size + 1, sizeof(char));
 
 			memcpy(content, miniblock->rw_buffer, miniblock->size + 1);
 			memcpy(content + miniblock->size, "\0", 1);
 
 			size_t start = 0;
+			//copy the content to the final string
 			copy_to_final(&size, &start, content, final, j, cnt_miniblock);
 
 			miniblock_list = miniblock_list->next;
 
+			//set the addres to the next miniblock
 			address = ((miniblock_t *)miniblock_list->data)->start_address;
 
 			free(content);
 			continue;
 		}
 
+		//if the starting address is between start and end of a miniblock
+		//so it has an offset
 		if (address > miniblock->start_address && address < end_mini) {
+			//check for write perms
 			if (!perm_print(miniblock)) {
 				free(final);
 				return;
@@ -225,6 +264,7 @@ void print_from_miniblock(block_t *block, uint64_t address,
 			char *content = calloc(miniblock->size + 1, sizeof(char));
 			memcpy(content, miniblock->rw_buffer, miniblock->size + 1);
 
+			//same copy as above, but starting from an offset
 			size_t start = offset;
 			copy_to_final(&size, &start, content, final, j, cnt_miniblock);
 			offset = 0;
@@ -237,6 +277,7 @@ void print_from_miniblock(block_t *block, uint64_t address,
 		}
 	}
 
+	//print the final string, if all miniblocks had permissions
 	printf("%s", final);
 	free(final);
 }
