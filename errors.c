@@ -1,3 +1,4 @@
+//Copyright 2023 Dan-Dominic Staicu 311CAb
 #include "errors.h"
 
 void error_inv_alloc_block_out(void)

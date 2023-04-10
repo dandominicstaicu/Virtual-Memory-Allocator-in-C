@@ -1,3 +1,4 @@
+//Copyright 2023 Dan-Dominic Staicu 311CAb
 #ifndef _ERRORS_H_
 #define _ERRORS_H_
 

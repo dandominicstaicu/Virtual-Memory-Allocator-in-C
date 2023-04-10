@@ -1,3 +1,4 @@
+//Copyright 2023 Dan-Dominic Staicu 311CAb
 #include "rw.h"
 
 void f_read(arena_t *arena)
@@ -346,37 +347,6 @@ uint8_t copy_to_miniblock(block_t *block, int8_t *data)
 	return 1;
 }
 
-void print_perm(uint8_t permissions)
-{
-	switch (permissions) {
-	case 0:
-		printf("---\n");
-		break;
-	case 1:
-		printf("--X\n");
-		break;
-	case 2:
-		printf("-W-\n");
-		break;
-	case 3:
-		printf("-WX\n");
-		break;
-	case 4:
-		printf("R--\n");
-		break;
-	case 5:
-		printf("R-X\n");
-		break;
-	case 6:
-		printf("RW-\n");
-		break;
-	case 7:
-		printf("RWX\n");
-		break;
-	default:
-		break;
-	}
-}
 
 void f_mprotect(arena_t *arena)
 {

@@ -1,3 +1,4 @@
+//Copyright 2023 Dan-Dominic Staicu 311CAb
 #include "arena.h"
 
 void f_alloc_arena(arena_t **arena)

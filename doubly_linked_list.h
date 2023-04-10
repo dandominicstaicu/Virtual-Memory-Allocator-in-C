@@ -1,3 +1,4 @@
+//Copyright 2023 Dan-Dominic Staicu 311CAb
 #ifndef _DOUBLY_LINKED_LIST_H_
 #define _DOUBLY_LINKED_LIST_H_
 

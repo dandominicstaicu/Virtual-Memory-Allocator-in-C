@@ -1,3 +1,4 @@
+//Copyright 2023 Dan-Dominic Staicu 311CAb
 #ifndef _RW_H_
 #define _RW_H_
 
@@ -26,9 +27,6 @@ void print_from_miniblock(block_t *block, uint64_t address,
 
 // transform parameters of MPROTECT command to digits according to the standard
 uint8_t num_perm(int8_t *permission);
-
-//used by PMAP to interpret digits as RWX format
-void print_perm(uint8_t permissions);
 
 //check if the miniblock has permissions to read
 uint8_t perm_print(miniblock_t *miniblock);

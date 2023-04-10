@@ -1,3 +1,4 @@
+//Copyright 2023 Dan-Dominic Staicu 311CAb
 #include "doubly_linked_list.h"
 
 //alloc nmemory for a new empty dll

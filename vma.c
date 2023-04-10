@@ -9,6 +9,8 @@ void pmap(const arena_t *arena)
 
 	node_t *block_list = (node_t *)arena->alloc_list->head;
 
+	//calculate the size of the occupied memory in the arena
+	//and the count of how many miniblocks are in the arena
 	for (uint64_t i = 1; i <= cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
 		free_size -= block->size;
@@ -39,7 +41,7 @@ void pmap(const arena_t *arena)
 			printf("\t\t0x%lX\t\t-\t\t0x%lX\t\t| ", miniblock->start_address,
 				   miniblock->start_address + miniblock->size);
 
-			//print permissions ---\n
+			//print permissions ---\n (RWX format)
 			print_perm(miniblock->perm);
 
 			miniblock_list = miniblock_list->next;
@@ -47,5 +49,37 @@ void pmap(const arena_t *arena)
 
 		printf("Block %ld end\n", i);
 		block_list = block_list->next;
+	}
+}
+
+void print_perm(uint8_t permissions)
+{
+	switch (permissions) {
+	case 0:
+		printf("---\n");
+		break;
+	case 1:
+		printf("--X\n");
+		break;
+	case 2:
+		printf("-W-\n");
+		break;
+	case 3:
+		printf("-WX\n");
+		break;
+	case 4:
+		printf("R--\n");
+		break;
+	case 5:
+		printf("R-X\n");
+		break;
+	case 6:
+		printf("RW-\n");
+		break;
+	case 7:
+		printf("RWX\n");
+		break;
+	default:
+		break;
 	}
 }

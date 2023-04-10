@@ -1,3 +1,4 @@
+//Copyright 2023 Dan-Dominic Staicu 311CAb
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
@@ -31,6 +32,8 @@ typedef struct {
 
 short hash_command(char *command);
 
+/* find check if an area has any part of it unavailable*/
+/*return NULL if no blocks, return it if found*/
 block_t *search_alloc(arena_t *arena,
 					  const uint64_t start, const uint64_t last);
 
