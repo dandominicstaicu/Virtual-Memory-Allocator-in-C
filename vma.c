@@ -241,8 +241,10 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 {
 	uint64_t cnt_block = arena->alloc_list->size;
 	node_t *block_list = arena->alloc_list->head;
+
 	for (uint64_t i = 0; i < cnt_block; ++i) {
 		block_t *block = (block_t *)block_list->data;
+
 		uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
 		node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
 
@@ -267,7 +269,6 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 					return;
 				} else if (start_mini == block->start_address) {
 					//miniblock at begining
-
 					// if there are more miniblocks inside the current block
 					block->start_address += miniblock->size;
 					block->size -= miniblock->size;
@@ -280,6 +281,7 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 				} else if (start_mini == end) {
 					// miniblock at the end
 					block->size -= miniblock->size;
+
 					list_t *mini_list = (list_t *)block->miniblock_list;
 					node_t *mini_rmv = ll_remove_nth_node(mini_list,
 														  mini_list->size);
@@ -291,8 +293,8 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 				// else it means it's in middle
 				//create new blocks with what was on left and right
 				node_t *loc_mini_list = ((list_t *)block->miniblock_list)->head;
-				list_t *alloc_l = (list_t *)arena->alloc_list;
-				node_t *blck_rmv = ll_remove_nth_node(alloc_l, i);
+				list_t *aloc_l = (list_t *)arena->alloc_list;
+				node_t *blck_rmv = ll_remove_nth_node(aloc_l, i);
 
 				for (uint64_t k = 0; k < cnt_miniblock; ++k) {
 					miniblock_t *loc_mini = (miniblock_t *)loc_mini_list->data;
@@ -302,12 +304,11 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 						alloc_block(arena, loc_mini->start_address,
 									loc_mini->size);
 					}
+
 					loc_mini_list = loc_mini_list->next;
 				}
-
 				//delete and free the whole old block
 				ll_free((list_t **)&block->miniblock_list);
-
 				free(blck_rmv->data);
 				free(blck_rmv);
 				return;
@@ -316,7 +317,6 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 		}
 		block_list = block_list->next;
 	}
-
 	error_inv_addr_free();
 }
 
@@ -554,7 +554,7 @@ void print_from_miniblock(block_t *block, uint64_t address,
 		}
 
 		if (miniblock->start_address == address) {
-			if (perm_print(miniblock)) {
+			if (!perm_print(miniblock)) {
 				free(final);
 				return;
 			}
@@ -576,7 +576,7 @@ void print_from_miniblock(block_t *block, uint64_t address,
 		}
 
 		if (address > miniblock->start_address && address < end_mini) {
-			if (perm_print(miniblock)) {
+			if (!perm_print(miniblock)) {
 				free(final);
 				return;
 			}
@@ -586,7 +586,6 @@ void print_from_miniblock(block_t *block, uint64_t address,
 
 			size_t start = offset;
 			copy_to_final(&size, &start, content, final, j, cnt_miniblock);
-
 			offset = 0;
 
 			miniblock_list = miniblock_list->next;
@@ -612,11 +611,11 @@ void copy_to_final(uint64_t *size, uint64_t *start, char *content, char *final,
 		c_to_str[0] = content[*start];
 		strcat(final, c_to_str);
 
-		*start++;
-		*size--;
+		*start = *start + 1;
+		*size = *size - 1;
 	}
 
-	if (start != len || j == cnt_miniblock - 1)
+	if (*start != len || j == cnt_miniblock - 1)
 		strcat(final, "\n");
 }
 
