@@ -8,4 +8,8 @@
 
 void f_alloc_arena(arena_t **arena);
 
+arena_t *alloc_arena(const uint64_t size);
+
+void dealloc_arena(arena_t *arena);
+
 #endif

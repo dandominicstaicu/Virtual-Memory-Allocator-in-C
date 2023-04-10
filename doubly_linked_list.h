@@ -1,7 +1,10 @@
 #ifndef _DOUBLY_LINKED_LIST_H_
 #define _DOUBLY_LINKED_LIST_H_
 
-#include "utils.h"
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 
 typedef struct node_t node_t;
 
@@ -15,6 +18,16 @@ typedef struct {
 	unsigned int data_size;
 	unsigned int size;
 } list_t;
+
+#define DIE(assertion, call_description)		\
+	do {										\
+		if (assertion) {						\
+			fprintf(stderr, "(%s, %d): ",		\
+					__FILE__, __LINE__);		\
+			perror(call_description);			\
+			exit(errno);				        \
+		}										\
+	} while (0)
 
 list_t *ll_create(unsigned int data_size);
 

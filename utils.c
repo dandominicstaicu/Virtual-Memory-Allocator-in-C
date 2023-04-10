@@ -21,3 +21,36 @@ short hash_command(char *command)
 
 	return -1;
 }
+
+block_t *search_alloc(arena_t *arena, const uint64_t start, const uint64_t last)
+{
+	/* find check if an area has any part of it unavailable*/
+	/*return NULL if no blocks, return it if found*/
+	node_t *block_list = arena->alloc_list->head;
+	uint64_t cnt_block = arena->alloc_list->size;
+
+	for (uint64_t i = 1; i <= cnt_block; ++i) {
+		block_t *block = (block_t *)block_list->data;
+
+		if (block->start_address >= start &&
+			block->start_address <= last) {
+			return block;
+		}
+
+		uint64_t arena_last = block->start_address + block->size - 1;
+		if (arena_last <= last && arena_last >= start)
+			return block;
+
+		if (start >= block->start_address &&
+			start <= block->start_address + block->size - 1)
+			return block;
+
+		if (last >= block->start_address &&
+			last <= block->start_address + block->size - 1)
+			return block;
+
+		block_list = block_list->next;
+	}
+
+	return NULL;
+}
