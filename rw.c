@@ -347,7 +347,6 @@ uint8_t copy_to_miniblock(block_t *block, int8_t *data)
 	return 1;
 }
 
-
 void f_mprotect(arena_t *arena)
 {
 	uint64_t arena_address = 0;
