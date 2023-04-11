@@ -15,7 +15,7 @@ void pmap(const arena_t *arena)
 		block_t *block = (block_t *)block_list->data;
 		free_size -= block->size;
 
-		all_miniblocks += dll_get_size((list_t *)block->miniblock_list);
+		all_miniblocks += ll_get_size((list_t *)block->miniblock_list);
 
 		block_list = block_list->next;
 	}

@@ -15,7 +15,7 @@ struct node_t {
 };
 
 typedef struct {
-	node_t *head;
+	node_t *head, *tail;
 	unsigned int data_size;
 	unsigned int size;
 } list_t;
@@ -40,6 +40,6 @@ node_t *ll_remove_nth_node(list_t *list, unsigned int n);
 
 void ll_free(list_t **pp_list);
 
-unsigned int dll_get_size(list_t *list);
+unsigned int ll_get_size(list_t *list);
 
 #endif

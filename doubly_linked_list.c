@@ -10,6 +10,7 @@ list_t *ll_create(unsigned int data_size)
 
 	//init the empty list
 	list->head = NULL;
+	list->tail = NULL;
 	list->data_size = data_size;
 	list->size = 0;
 
@@ -67,6 +68,7 @@ void ll_add_nth_node(list_t *list, unsigned int n,
 		new_node->prev = new_node;
 
 		list->head = new_node;
+		list->tail = new_node;
 		++list->size;
 
 		return;
@@ -99,6 +101,9 @@ void ll_add_nth_node(list_t *list, unsigned int n,
 	node->next->prev = new_node;
 	node->next = new_node;
 
+	if (n == list->size)
+		list->tail = new_node;
+
 	++list->size;
 }
 
@@ -122,11 +127,16 @@ node_t *ll_remove_nth_node(list_t *list, unsigned int n)
 		rmv = ll_get_nth_node(list, n);
 	}
 
+	if (n == list->size - 1)
+		list->tail = rmv->prev;
+
 	rmv->next->prev = rmv->prev;
 	rmv->prev->next = rmv->next;
 
-	if (--list->size == 0)
+	if (--list->size == 0) {
 		list->head = NULL;
+		list->tail = NULL;
+	}
 
 	return rmv;
 }
@@ -155,7 +165,8 @@ void ll_free(list_t **pp_list)
 	*pp_list = NULL;
 }
 
-unsigned int dll_get_size(list_t *list)
+unsigned int ll_get_size(list_t *list)
 {
 	return list->size;
 }
+
