@@ -256,7 +256,7 @@ void print_from_miniblock(block_t *block, uint64_t address,
 
 			char *content = calloc(miniblock->size + 1, sizeof(char));
 			DIE(!content, "content calloc failed\n");
-			
+
 			memcpy(content, miniblock->rw_buffer, miniblock->size + 1);
 
 			//same copy as above, but starting from an offset

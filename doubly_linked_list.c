@@ -1,7 +1,7 @@
 //Copyright 2023 Dan-Dominic Staicu 311CAb
 #include "doubly_linked_list.h"
 
-//alloc nmemory for a new empty dll
+//alloc memory for a new empty list
 list_t *ll_create(unsigned int data_size)
 {
 	//alloc a new list and check
@@ -31,7 +31,7 @@ node_t *ll_get_nth_node(list_t *list, unsigned int n)
 	//iterate to the n-th node
 	node_t *node = list->head;
 
-	//if n == 0 then this for won't execute, so it will return list->head
+	//if n == 0 then it will return list->head
 	for (unsigned int i = 0; i < poz; ++i)
 		node = node->next;
 
@@ -89,7 +89,7 @@ void ll_add_nth_node(list_t *list, unsigned int n,
 	if (n >= list->size)
 		n = list->size;
 
-	//getthe previous (to the new_node) node
+	//get the previous (to the new_node) node
 	node = ll_get_nth_node(list, n - 1);
 
 	//create the new links
