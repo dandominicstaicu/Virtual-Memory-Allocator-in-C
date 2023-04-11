@@ -8,20 +8,13 @@ void f_alloc_arena(arena_t **arena)
 
 	//alloc_arena() returns a pointer to arena_t *
 	*arena = alloc_arena(arena_size);
-	if (!(*arena)) {
-		fprintf(stderr, "failed alloc in f_alloc\n");
-		exit(-1);
-	}
+	DIE(!arena, "failed alloc in f_alloc\n");
 }
 
 arena_t *alloc_arena(const uint64_t size)
 {
 	arena_t *arena = malloc(sizeof(arena_t));
-
-	if (!arena) {
-		fprintf(stderr, "could not alloc mem in alloc_arena\n");
-		return NULL;
-	}
+	DIE(!arena, "arena malloc failed in alloc_arena\n");
 
 	arena->arena_size = size;
 	arena->alloc_list = ll_create(sizeof(block_t));

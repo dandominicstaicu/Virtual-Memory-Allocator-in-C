@@ -20,14 +20,12 @@ void f_write(arena_t *arena)
 
 	//alloc a new memory in order to save all the read data in one mem zone
 	int8_t *data = calloc(write_size + 1, sizeof(int8_t));
-	if (!data) {
-		fprintf(stderr, "could not alloc data\n");
-		exit(-1);
-	}
+	DIE(!data, "could not alloc data\n");
 	getchar(); //step over the \n from the previous command
 
 	//alloc a new mem for reading each line
 	int8_t *buffer = calloc(write_size + 1, sizeof(int8_t));
+	DIE(!buffer, "buffer alloc faild\n");
 	size_t buff_size = 0;
 
 	//while there can be read more characters
@@ -122,10 +120,7 @@ void write(arena_t *arena, const uint64_t address,
 				/* if the data doesn't fit within the block*/
 				uint64_t available_space = end_block - address + 1;
 				int8_t *new_data = calloc(available_space + 2, sizeof(int8_t));
-				if (!new_data) {
-					fprintf(stderr, "could not alloc new data\n");
-					exit(-1);
-				}
+				DIE(!new_data, "could not alloc new data\n");
 
 				//copy to new data only as much as it fits
 				memcpy(new_data, data, available_space);
@@ -211,10 +206,7 @@ void print_from_miniblock(block_t *block, uint64_t address,
 
 	/* create a new mem zone where it saves the final output*/
 	char *final = calloc(size + 2, sizeof(char));
-	if (!final) {
-		fprintf(stderr, "calloc failed in print miniblock\n");
-		return;
-	}
+	DIE(!final, "calloc failed in print miniblock\n");
 
 	for (uint64_t j = 0; j < cnt_miniblock ; ++j) {
 		miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
@@ -263,6 +255,8 @@ void print_from_miniblock(block_t *block, uint64_t address,
 			}
 
 			char *content = calloc(miniblock->size + 1, sizeof(char));
+			DIE(!content, "content calloc failed\n");
+			
 			memcpy(content, miniblock->rw_buffer, miniblock->size + 1);
 
 			//same copy as above, but starting from an offset

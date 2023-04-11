@@ -43,17 +43,10 @@ void f_free_block(arena_t *arena)
 void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 {
 	block_t *block = calloc(1, sizeof(block_t));
-	if (!block) {
-		fprintf(stderr, "block alloc failed");
-		exit(-1);
-	}
+	DIE(!block, "block alloc failed\n");
 
 	miniblock_t *first_miniblock = calloc(1, sizeof(miniblock_t));
-	if (!first_miniblock) {
-		fprintf(stderr, "malloc failed in alloc at first_minibloc\n");
-		free(block);
-		exit(-1);
-	}
+	DIE(!first_miniblock, "malloc failed in alloc at first_minibloc\n");
 
 	//initial values of any new miniblock
 	first_miniblock->start_address = address;
@@ -61,12 +54,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 	first_miniblock->perm = 6;
 
 	first_miniblock->rw_buffer = calloc(size + 2, sizeof(int8_t));
-	if (!first_miniblock->rw_buffer) {
-		fprintf(stderr, "rw_buffer calloc failed\n");
-		free(block);
-		free(first_miniblock);
-		exit(-1);
-	}
+	DIE(!first_miniblock->rw_buffer, "rw_buffer calloc failed\n");
 
 	//search for any alloc'd blocks next to the area of the new miniblock
 	block_t *neighbor_r = search_alloc(arena, address + size, address + size);
