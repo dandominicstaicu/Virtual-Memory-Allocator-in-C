@@ -42,13 +42,13 @@ void f_free_block(arena_t *arena)
 
 void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 {
-	block_t *block = malloc(sizeof(block_t));
+	block_t *block = calloc(1, sizeof(block_t));
 	if (!block) {
 		fprintf(stderr, "block alloc failed");
 		exit(-1);
 	}
 
-	miniblock_t *first_miniblock = malloc(sizeof(miniblock_t));
+	miniblock_t *first_miniblock = calloc(1, sizeof(miniblock_t));
 	if (!first_miniblock) {
 		fprintf(stderr, "malloc failed in alloc at first_minibloc\n");
 		free(block);
@@ -62,7 +62,7 @@ void alloc_block(arena_t *arena, const uint64_t address, const uint64_t size)
 
 	first_miniblock->rw_buffer = calloc(size + 2, sizeof(int8_t));
 	if (!first_miniblock->rw_buffer) {
-		fprintf(stderr, "rw_buffer calloc failed");
+		fprintf(stderr, "rw_buffer calloc failed\n");
 		free(block);
 		free(first_miniblock);
 		exit(-1);
@@ -181,7 +181,20 @@ void just_right(block_t *block, block_t *neighbor_r, arena_t *arena,
 	the FALSE (0) parameter means the free is not final, so don't free
 	the rw_buffer of the older miniblocks because didn't deep copy the
 	memory of it */
-	free_block(arena, neighbor_r->start_address, 0);
+	uint64_t cnt_miniblock = right_list->size;
+	node_t *old_miniblock_r = right_list->head;
+
+	for (uint64_t j = 0; j < cnt_miniblock; ++j) {
+		miniblock_t *old_miniblock = (miniblock_t *)old_miniblock_r->data;
+
+		old_miniblock_r = old_miniblock_r->next;
+
+		uint64_t old_addr = old_miniblock->start_address;
+		/* the FALSE (0) parameter means the free is not final, so don't free
+		the rw_buffer of the older miniblocks because didn't deep copy the
+		memory of it */
+		free_block(arena, old_addr, 0);
+	}
 
 	block->start_address = address;
 }

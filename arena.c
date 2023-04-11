@@ -46,11 +46,13 @@ void dealloc_arena(arena_t *arena)
 		uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
 		node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
 
+		// fprintf(stderr, "cnt_minis: %lu\n", cnt_miniblock);
+
 		for (uint64_t j = 0; j < cnt_miniblock; ++j) {
 			miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
-			miniblock_list = miniblock_list->next;
 
 			free(miniblock->rw_buffer);
+			miniblock_list = miniblock_list->next;
 		}
 
 		//free the miniblock list of every single block
