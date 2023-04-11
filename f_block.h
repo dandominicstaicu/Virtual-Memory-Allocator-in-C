@@ -39,4 +39,6 @@ the older block and add the new miniblock to it */
 void just_left(block_t *block, block_t *neighbor_l, arena_t *arena,
 			   miniblock_t *first_miniblock, uint64_t size);
 
+int8_t f(block_t **block, uint64_t address, uint64_t final, arena_t *arena, uint64_t i);
+
 #endif

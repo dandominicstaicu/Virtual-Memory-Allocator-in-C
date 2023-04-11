@@ -261,58 +261,83 @@ void both_neighbors(block_t *block, block_t *neighbor_l, block_t *neighbor_r,
 void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 {
 	uint64_t cnt_block = arena->alloc_list->size;
-	node_t *block_list = arena->alloc_list->head;
+	int8_t check = 0;
+	//if (address < arena->arena_size / 2) {
+		node_t *block_list = arena->alloc_list->head;
+		for (uint64_t i = 0; i < cnt_block; ++i) {
+			block_t *block = (block_t *)block_list->data;
 
-	for (uint64_t i = 0; i < cnt_block; ++i) {
-		block_t *block = (block_t *)block_list->data;
-		uint64_t cnt_miniblock = ((list_t *)block->miniblock_list)->size;
-		node_t *miniblock_list = ((list_t *)block->miniblock_list)->head;
+			check = f(&block, address, final, arena, i);
+			if (check)
+				return;
+
+			block_list = block_list->next;
+		}
+	// } else {
+	// 	node_t *block_list = arena->alloc_list->tail;
+	// 	for (uint64_t i = 0; i < cnt_block; ++i) {
+	// 		block_t *block = (block_t *)block_list->data;
+
+	// 		f(block, address, final, arena, i);
+
+	// 		block_list = block_list->prev;
+	// 	}
+	// }
+	// if the no miniblock with the given address was found, print error
+	if (!check)
+		error_inv_addr_free();
+}
+
+int8_t f(block_t **block, uint64_t address, uint64_t final, arena_t *arena, uint64_t i)
+{
+	uint64_t cnt_miniblock = ((list_t *)(*block)->miniblock_list)->size;
+		node_t *miniblock_list = ((list_t *)(*block)->miniblock_list)->head;
 
 		//iterate all the miniblocks inside every single block in the arena
 		for (uint64_t j = 0; j < cnt_miniblock; ++j) {
 			miniblock_t *miniblock = (miniblock_t *)miniblock_list->data;
 
 			uint64_t start_mini = miniblock->start_address;
-			uint64_t end = block->start_address + block->size - miniblock->size;
+			uint64_t end = (*block)->start_address + (*block)->size - miniblock->size;
 			//check if any mini has the given address
 			if (start_mini == address) {
 				if (final == 1)
 					free(miniblock->rw_buffer);
 
 				//if the miniblock is the only one in the block
-				if (miniblock->size == block->size) {
-					ll_free((list_t **)&block->miniblock_list); //God help me
+				if (miniblock->size == (*block)->size) {
+					ll_free((list_t **)&(*block)->miniblock_list); //God help me
 					list_t *alloc_l = (list_t *)arena->alloc_list;
 
 					node_t *block_rmv = ll_remove_nth_node(alloc_l, i);
 					free(block_rmv->data);
 					free(block_rmv);
-					return;
-				} else if (start_mini == block->start_address) {
+					return 1;
+				} else if (start_mini == (*block)->start_address) {
 					//miniblock at begining
 					// if there are more miniblocks inside the current block
-					block->start_address += miniblock->size;
-					block->size -= miniblock->size;
+					(*block)->start_address += miniblock->size;
+					(*block)->size -= miniblock->size;
 
-					list_t *mini_list = (list_t *)block->miniblock_list;
+					list_t *mini_list = (list_t *)(*block)->miniblock_list;
 					node_t *mini_rmv = ll_remove_nth_node(mini_list, 0);
 					free(mini_rmv->data);
 					free(mini_rmv);
-					return;
+					return 1;
 				} else if (start_mini == end) {
 					// miniblock at the end
-					block->size -= miniblock->size;
+					(*block)->size -= miniblock->size;
 
-					list_t *mini_list = (list_t *)block->miniblock_list;
+					list_t *mini_list = (list_t *)(*block)->miniblock_list;
 					node_t *mini_rmv = ll_remove_nth_node(mini_list,
 														  mini_list->size);
 					free(mini_rmv->data);
 					free(mini_rmv);
-					return;
+					return 1;
 				}
 				// else it means it's in middle
 				//create new blocks with what was on left and right
-				node_t *loc_mini_list = ((list_t *)block->miniblock_list)->head;
+				node_t *loc_mini_list = ((list_t *)(*block)->miniblock_list)->head;
 				list_t *aloc_l = (list_t *)arena->alloc_list;
 				node_t *blck_rmv = ll_remove_nth_node(aloc_l, i);
 
@@ -328,15 +353,12 @@ void free_block(arena_t *arena, const uint64_t address, uint64_t final)
 					loc_mini_list = loc_mini_list->next;
 				}
 				//delete and free the whole old block
-				ll_free((list_t **)&block->miniblock_list);
+				ll_free((list_t **)&(*block)->miniblock_list);
 				free(blck_rmv->data);
 				free(blck_rmv);
-				return;
+				return 1;
 			}
 			miniblock_list = miniblock_list->next;
 		}
-		block_list = block_list->next;
-	}
-	// if the no miniblock with the given address was found, print error
-	error_inv_addr_free();
+	return 0;
 }
